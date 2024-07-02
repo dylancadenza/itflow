@@ -5,6 +5,9 @@ chdir(dirname(__FILE__));
 
 require_once "config.php";
 
+// Set Timezone
+require_once "inc_set_timezone.php";
+
 require_once "functions.php";
 
 
@@ -32,7 +35,6 @@ $config_invoice_from_email = sanitizeInput($row['config_invoice_from_email']);
 $config_invoice_from_name = sanitizeInput($row['config_invoice_from_name']);
 $config_invoice_late_fee_enable = intval($row['config_invoice_late_fee_enable']);
 $config_invoice_late_fee_percent = floatval($row['config_invoice_late_fee_percent']);
-$config_timezone = sanitizeInput($row['config_timezone']);
 
 // Mail Settings
 $config_smtp_host = $row['config_smtp_host'];
@@ -65,11 +67,14 @@ $config_telemetry = intval($row['config_telemetry']);
 $config_enable_alert_domain_expire = intval($row['config_enable_alert_domain_expire']);
 $config_send_invoice_reminders = intval($row['config_send_invoice_reminders']);
 
+// Remember-me Token Expiry
+$config_login_remember_me_expire = intval($row['config_login_remember_me_expire']);
+
+// Log retention
+$config_log_retention = intval($row['config_log_retention']);
+
 // Set Currency Format
 $currency_format = numfmt_create($company_locale, NumberFormatter::CURRENCY);
-
-// Set Timezone
-date_default_timezone_set($config_timezone);
 
 $argv = $_SERVER['argv'];
 
@@ -118,8 +123,11 @@ mysqli_query($mysqli, "DELETE FROM notifications WHERE notification_dismissed_at
 // Clean-up mail queue
 mysqli_query($mysqli, "DELETE FROM email_queue WHERE email_queued_at < CURDATE() - INTERVAL 90 DAY");
 
-// Clean-up old remember me tokens (2 or more days old)
-mysqli_query($mysqli, "DELETE FROM remember_tokens WHERE remember_token_created_at < CURDATE() - INTERVAL 2 DAY");
+// Clean-up old remember me tokens
+mysqli_query($mysqli, "DELETE FROM remember_tokens WHERE remember_token_created_at < CURDATE() - INTERVAL $config_login_remember_me_expire DAY");
+
+// Cleanup old audit logs
+mysqli_query($mysqli, "DELETE FROM logs WHERE log_created_at < CURDATE() - INTERVAL $config_log_retention DAY");
 
 //Logging
 //mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Cron', log_action = 'Task', log_description = 'Cron cleaned up old data'");
@@ -225,9 +233,7 @@ foreach ($warranty_alert_array as $day) {
 
 // Notify of New Tickets
 // Get Ticket Pending Assignment
-$sql_tickets_pending_assignment = mysqli_query($mysqli,"SELECT ticket_id FROM tickets
-    WHERE ticket_status = 'New'"
-);
+$sql_tickets_pending_assignment = mysqli_query($mysqli,"SELECT ticket_id FROM tickets WHERE ticket_status = 1");
 
 $tickets_pending_assignment = mysqli_num_rows($sql_tickets_pending_assignment);
 
@@ -252,15 +258,16 @@ if (mysqli_num_rows($sql_scheduled_tickets) > 0) {
         $details = mysqli_real_escape_string($mysqli, $row['scheduled_ticket_details']);
         $priority = sanitizeInput($row['scheduled_ticket_priority']);
         $frequency = sanitizeInput(strtolower($row['scheduled_ticket_frequency']));
+        $billable = intval($row['scheduled_ticket_billable']);
         $created_id = intval($row['scheduled_ticket_created_by']);
         $assigned_id = intval($row['scheduled_ticket_assigned_to']);
         $client_id = intval($row['scheduled_ticket_client_id']);
         $contact_id = intval($row['scheduled_ticket_contact_id']);
         $asset_id = intval($row['scheduled_ticket_asset_id']);
 
-        $ticket_status = 'New'; // Default
+        $ticket_status = 1; // Default
         if ($assigned_id > 0) {
-            $ticket_status = 'Open'; // Set to open if we've auto-assigned an agent
+            $ticket_status = 2; // Set to open if we've auto-assigned an agent
         }
 
         // Assign this new ticket the next ticket number
@@ -272,7 +279,7 @@ if (mysqli_num_rows($sql_scheduled_tickets) > 0) {
         mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
 
         // Raise the ticket
-        mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_status = '$ticket_status', ticket_created_by = $created_id, ticket_assigned_to = $assigned_id, ticket_contact_id = $contact_id, ticket_client_id = $client_id, ticket_asset_id = $asset_id");
+        mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_status = '$ticket_status', ticket_billable = $billable, ticket_created_by = $created_id, ticket_assigned_to = $assigned_id, ticket_contact_id = $contact_id, ticket_client_id = $client_id, ticket_asset_id = $asset_id");
         $id = mysqli_insert_id($mysqli);
 
         // Logging
@@ -381,7 +388,7 @@ if ($config_ticket_autoclose == 1) {
     $sql_tickets_to_chase = mysqli_query(
         $mysqli,
         "SELECT * FROM tickets 
-        WHERE ticket_status = 'Auto Close'
+        WHERE ticket_status = 4
         AND ticket_updated_at < NOW() - INTERVAL $config_ticket_autoclose_hours HOUR"
     );
 
@@ -395,7 +402,7 @@ if ($config_ticket_autoclose == 1) {
         $ticket_assigned_to = sanitizeInput($row['ticket_assigned_to']);
         $client_id = intval($row['ticket_client_id']);
 
-        mysqli_query($mysqli,"UPDATE tickets SET ticket_status = 'Closed', ticket_closed_at = NOW(), ticket_closed_by = $ticket_assigned_to WHERE ticket_id = $ticket_id");
+        mysqli_query($mysqli,"UPDATE tickets SET ticket_status = 5, ticket_closed_at = NOW(), ticket_closed_by = $ticket_assigned_to WHERE ticket_id = $ticket_id");
 
         //Logging
         mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Ticket', log_action = 'Closed', log_description = '$ticket_prefix$ticket_number auto closed', log_entity_id = $ticket_id");
@@ -410,7 +417,7 @@ if ($config_ticket_autoclose == 1) {
         "SELECT contact_name, contact_email, ticket_id, ticket_prefix, ticket_number, ticket_subject, ticket_status, ticket_client_id FROM tickets 
         LEFT JOIN clients ON ticket_client_id = client_id 
         LEFT JOIN contacts ON ticket_contact_id = contact_id
-        WHERE ticket_status = 'Auto Close'
+        WHERE ticket_status = 4
         AND ticket_updated_at < NOW() - INTERVAL 48 HOUR"
     );
 
@@ -422,7 +429,7 @@ if ($config_ticket_autoclose == 1) {
         $ticket_prefix = sanitizeInput($row['ticket_prefix']);
         $ticket_number = intval($row['ticket_number']);
         $ticket_subject = sanitizeInput($row['ticket_subject']);
-        $ticket_status = sanitizeInput($row['ticket_status']);
+        $ticket_status = sanitizeInput( getTicketStatusName($row['ticket_status']));
         $client_id = intval($row['ticket_client_id']);
 
         $sql_ticket_reply = mysqli_query($mysqli, "SELECT ticket_reply FROM ticket_replies WHERE ticket_reply_type = 'Public' AND ticket_reply_ticket_id = $ticket_id ORDER BY ticket_reply_created_at DESC LIMIT 1");
@@ -431,7 +438,7 @@ if ($config_ticket_autoclose == 1) {
 
         $subject = "Ticket pending closure - [$ticket_prefix$ticket_number] - $ticket_subject";
 
-        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello, $contact_name<br><br>This is an automatic friendly reminder that your ticket regarding \"$ticket_subject\" will be closed, unless you respond.<br><br>--------------------------------<br>$ticket_reply--------------------------------<br><br>If your issue is resolved, you can ignore this email - the ticket will automatically close. If you need further assistance, please respond to this email.  <br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status<br>Portal: https://$config_base_url/portal/ticket.php?id=$ticket_id<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello, $contact_name<br><br>This is an automatic friendly reminder that your ticket regarding \"$ticket_subject\" will be closed, unless you respond.<br><br>--------------------------------<br>$ticket_reply--------------------------------<br><br>If your issue is resolved, you can ignore this email - the ticket will automatically close. If you need further assistance, please respond to this email.  <br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status <br>Portal: https://$config_base_url/portal/ticket.php?id=$ticket_id<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
 
         $data = [
             [
@@ -558,14 +565,15 @@ while ($row = mysqli_fetch_array($sql_recurring)) {
     $recurring_discount_amount = floatval($row['recurring_discount_amount']);
     $recurring_amount = floatval($row['recurring_amount']);
     $recurring_currency_code = sanitizeInput($row['recurring_currency_code']);
-    $recurring_note = sanitizeInput($row['recurring_note']); //Escape SQL
+    $recurring_note = sanitizeInput($row['recurring_note']);
+    $recurring_invoice_email_notify = intval($row['recurring_invoice_email_notify']);
     $category_id = intval($row['recurring_category_id']);
     $client_id = intval($row['recurring_client_id']);
-    $client_name = sanitizeInput($row['client_name']); //Escape SQL just in case a name is like Safran's etc
+    $client_name = sanitizeInput($row['client_name']);
     $client_net_terms = intval($row['client_net_terms']);
 
 
-    //Get the last Invoice Number and add 1 for the new invoice number
+    // Get the last Invoice Number and add 1 for the new invoice number
     $sql_invoice_number = mysqli_query($mysqli, "SELECT * FROM settings WHERE company_id = 1");
     $row = mysqli_fetch_array($sql_invoice_number);
     $config_invoice_next_number = intval($row['config_invoice_next_number']);
@@ -609,7 +617,7 @@ while ($row = mysqli_fetch_array($sql_recurring)) {
 
     mysqli_query($mysqli, "UPDATE recurring SET recurring_last_sent = CURDATE(), recurring_next_date = DATE_ADD(CURDATE(), INTERVAL 1 $recurring_frequency) WHERE recurring_id = $recurring_id");
 
-    if ($config_recurring_auto_send_invoice == 1) {
+    if ($config_recurring_auto_send_invoice == 1 && $recurring_invoice_email_notify == 1) {
         $sql = mysqli_query(
             $mysqli,
             "SELECT * FROM invoices
@@ -732,7 +740,7 @@ while ($row = mysqli_fetch_array($sql_recurring_expenses)) {
 
 // TELEMETRY
 
-if ($config_telemetry > 0 OR $config_telemetry = 2) {
+if ($config_telemetry > 0 OR $config_telemetry == 2) {
 
     $current_version = exec("git rev-parse HEAD");
 
@@ -977,6 +985,19 @@ if ($config_telemetry > 0 OR $config_telemetry = 2) {
     // Logging
     mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Cron', log_action = 'Telemetry', log_description = 'Cron sent telemetry results to ITFlow Developers'");
 }
+
+
+// Fetch Updates
+$updates = fetchUpdates();
+
+$update_message = $updates->update_message;
+
+if ($updates->current_version !== $updates->latest_version) {
+    // Send Alert to inform Updates Available
+    mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Update', notification = '$update_message', notification_action = 'admin_update.php'");
+}
+
+
 
 /*
  * ###############################################################################################################

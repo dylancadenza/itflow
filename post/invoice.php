@@ -675,7 +675,7 @@ if (isset($_POST['add_payment'])) {
             if ($email_receipt == 1) {
 
                 $subject = "$company_name Payment Received - Invoice $invoice_prefix$invoice_number";
-                $body = "Hello $contact_name,<br><br>We have received your payment in the amount of " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . " for invoice <a href=\'https://$config_base_url/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>$invoice_prefix$invoice_number</a>. Please keep this email as a receipt for your records.<br><br>Amount: " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . "<br>Balance: " . numfmt_format_currency($currency_format, $invoice_balance, $invoice_currency_code) . "<br><br>Thank you for your business!<br><br><br>--<br>$company_name - Billing Department<br>$config_invoice_from_email<br>$company_phone";
+                $body = "Hello $contact_name,<br><br>We have received your payment in full for the amount of " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . " for invoice <a href=\'https://$config_base_url/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>$invoice_prefix$invoice_number</a>. Please keep this email as a receipt for your records.<br><br>Amount Payed: " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . "<br>Payment Method: $payment_method<br>Payment Reference: $reference<br><br>Thank you for your business!<br><br><br>--<br>$company_name - Billing Department<br>$config_invoice_from_email<br>$company_phone";
 
                 // Queue Mail
                 $email = [
@@ -707,7 +707,7 @@ if (isset($_POST['add_payment'])) {
             if ($email_receipt == 1) {
 
                 $subject = "$company_name Partial Payment Received - Invoice $invoice_prefix$invoice_number";
-                $body = "Hello $contact_name,<br><br>We have received partial payment in the amount of " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . " and it has been applied to invoice <a href=\'https://$config_base_url/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>$invoice_prefix$invoice_number</a>. Please keep this email as a receipt for your records.<br><br>Amount: " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . "<br>Balance: " . numfmt_format_currency($currency_format, $invoice_balance, $invoice_currency_code) . "<br><br>Thank you for your business!<br><br><br>~<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+                $body = "Hello $contact_name,<br><br>We have received partial payment in the amount of " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . " and it has been applied to invoice <a href=\'https://$config_base_url/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>$invoice_prefix$invoice_number</a>. Please keep this email as a receipt for your records.<br><br>Amount Payed: " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . "<br>Payment Method: $payment_method<br>Payment Reference: $reference<br>Invoice Balance: " . numfmt_format_currency($currency_format, $invoice_balance, $invoice_currency_code) . "<br><br>Thank you for your business!<br><br><br>~<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
 
                 // Queue Mail
                 $email = [
@@ -1253,6 +1253,57 @@ if (isset($_POST['export_client_invoices_csv'])) {
 
 }
 
+if (isset($_POST['export_invoices_csv'])) {
+    $date_from = sanitizeInput($_POST['date_from']);
+    $date_to = sanitizeInput($_POST['date_to']);
+    if (!empty($date_from) && !empty($date_to)) {
+        $date_query = "DATE(invoice_date) BETWEEN '$date_from' AND '$date_to'";
+        $file_name_date = "$date_from-to-$date_to";
+    }else{
+        $date_query = "";
+        $file_name_date = date('Y-m-d');
+    }
+
+    $sql = mysqli_query($mysqli,"SELECT * FROM invoices LEFT JOIN clients ON invoice_client_id = client_id WHERE $date_query ORDER BY invoice_number ASC");
+
+    $row = mysqli_fetch_array($sql);
+    $client_name = $row['client_name'];
+
+    if ($sql->num_rows > 0) {
+        $delimiter = ",";
+        $filename = "$session_company_name-Invoices-$file_name_date.csv";
+
+        //create a file pointer
+        $f = fopen('php://memory', 'w');
+
+        //set column headers
+        $fields = array('Invoice Number', 'Scope', 'Amount', 'Issued Date', 'Due Date', 'Status');
+        fputcsv($f, $fields, $delimiter);
+
+        //output each row of the data, format line as csv and write to file pointer
+        while($row = $sql->fetch_assoc()) {
+            $lineData = array($row['invoice_prefix'] . $row['invoice_number'], $row['invoice_scope'], $row['invoice_amount'], $row['invoice_date'], $row['invoice_due'], $row['invoice_status'], $row['client_name']);
+            fputcsv($f, $lineData, $delimiter);
+        }
+
+        //move back to beginning of file
+        fseek($f, 0);
+
+        //set headers to download file rather than displayed
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '";');
+
+        //output all remaining data on a file pointer
+        fpassthru($f);
+    }
+
+    //Logging
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Export', log_description = '$session_name exported invoices to CSV File', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id");
+    
+    exit;
+
+}
+
 if (isset($_POST['export_client_recurring_csv'])) {
     $client_id = intval($_POST['client_id']);
 
@@ -1403,6 +1454,22 @@ if (isset($_POST['update_invoice_item_order'])) {
     mysqli_query($mysqli,"UPDATE invoice_items SET item_order = $current_order WHERE item_id = $other_item_id");
 
     $_SESSION['alert_message'] = "Invoice Item Order Updated";
+
+    header("Location: " . $_SERVER["HTTP_REFERER"]);
+}
+
+if (isset($_GET['recurring_invoice_email_notify'])) {
+    $recurring_invoice_email_notify = intval($_GET['recurring_invoice_email_notify']);
+    $recurring_id = intval($_GET['recurring_id']);
+
+    mysqli_query($mysqli,"UPDATE recurring SET recurring_invoice_email_notify = $recurring_invoice_email_notify WHERE recurring_id = $recurring_id");
+
+    if ($recurring_invoice_email_notify) {
+        $_SESSION['alert_message'] = "Email Notifications On";
+    } else {
+        $_SESSION['alert_type'] = "error";
+        $_SESSION['alert_message'] = "Email Notifications Off";
+    }
 
     header("Location: " . $_SERVER["HTTP_REFERER"]);
 }

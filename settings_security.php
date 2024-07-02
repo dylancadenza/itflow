@@ -1,5 +1,5 @@
 <?php
-require_once "inc_all_settings.php";
+require_once "inc_all_admin.php";
 
 ?>
 
@@ -30,6 +30,26 @@ require_once "inc_all_settings.php";
                         <span class="input-group-text"><i class="fa fa-fw fa-key"></i></span>
                     </div>
                     <input type="text" class="form-control" name="config_login_key_secret" pattern="\w{3,99}" placeholder="Something really easy for techs to remember: e.g. MYSECRET" value="<?php echo nullable_htmlentities($config_login_key_secret); ?>">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>2FA Remember Me Expire <small class="text-secondary">(The amount of days before a device 2FA remember me token will expire)</small></label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fa fa-fw fa-clock"></i></span>
+                    </div>
+                    <input type="number" class="form-control" name="config_login_remember_me_expire" placeholder="Enter Days to Expire" value="<?php echo intval($config_login_remember_me_expire); ?>">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Log retention <small class="text-secondary">(The amount of days before audit logs are deleted during nightly cron)</small></label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fa fa-fw fa-clock"></i></span>
+                    </div>
+                    <input type="number" class="form-control" name="config_log_retention" placeholder="Enter days to retain" value="<?php echo intval($config_log_retention); ?>">
                 </div>
             </div>
 

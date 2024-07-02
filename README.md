@@ -30,7 +30,7 @@
     ·
     <a href="https://forum.itflow.org/">Forum</a>
     ·
-    <a href="https://github.com/itflow-org/itflow/issues">Report Bug</a>
+    <a href="https://forum.itflow.org/t/bug">Report Bug</a>
     ·
     <a href="https://forum.itflow.org/t/features">Request Feature</a>
     ·
@@ -127,15 +127,14 @@ ITFlow is self-hosted. There is a full installation guide in the [docs](https://
 * Recent caller toast alerts to click and bring up the clients account right away
 * FIDO2 WebAuthn Support for passwordless auth (TPM Fingerprint), (USB Hardware keys such as Yubikey)
 
-See the [forum](https://forum.itflow.org/d/11-road-map) and the [open issues](https://github.com/itflow-org/itflow/issues) for a full list of proposed features & known issues.
+See the [forum](https://forum.itflow.org/t/added-to-roadmap) and the [open issues](https://github.com/itflow-org/itflow/issues) for a full list of proposed features & known issues.
 
 
 <!-- CONTRIBUTING -->
 ## Support & Contributions
 
 ### Forum
-For help using ITFlow, feature requests, and general ideas / discussions please use the community [forum](https://forum.itflow.org).
-For bugs, please raise an [issue](https://github.com/itflow-org/itflow/issues).
+For help using ITFlow, bugs, feature requests, and general ideas / discussions please use the community [forum](https://forum.itflow.org).
 
 ### Contributing
 If you want to improve ITFlow, feel free to fork the repo and create a pull request, but make sure to discuss significant changes or new features with fellow contributors on the forum first. This helps ensure that your contributions are aligned with project goals, and saves time for everyone. All contributions should follow our  [code standards](https://docs.itflow.org/code_standards).

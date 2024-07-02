@@ -19,6 +19,9 @@
                         <li class="nav-item">
                             <a class="nav-link" data-toggle="pill" href="#pills-records">Records</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#pillsEditNotes">Notes</a>
+                        </li>
                     </ul>
 
                     <hr>
@@ -70,6 +73,28 @@
                             </div>
 
                             <div class="form-group">
+                                <label>DNS Host</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fa fa-fw fa-server"></i></span>
+                                    </div>
+                                    <select class="form-control select2" id="editDomainDNShostId" name="dnshost">
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Mail Host</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fa fa-fw fa-envelope"></i></span>
+                                    </div>
+                                    <select class="form-control select2" id="editDomainMailhostId" name="mailhost">
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
                                 <label>Expire Date</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -77,11 +102,6 @@
                                     </div>
                                     <input type="date" class="form-control" id="editDomainExpire" name="expire" max="2999-12-31">
                                 </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Notes</label>
-                                <textarea class="form-control" id="editDomainNotes" name="notes" rows="3" placeholder="Enter some notes"></textarea>
                             </div>
 
                         </div>
@@ -138,6 +158,12 @@
                                 </div>
                             </div>
 
+                        </div>
+
+                        <div class="tab-pane fade" id="pillsEditNotes">
+                            <div class="form-group">
+                                <textarea class="form-control" id="editDomainNotes" name="notes" rows="12" placeholder="Enter some notes"></textarea>
+                            </div>
                         </div>
 
                     </div>

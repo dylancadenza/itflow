@@ -47,7 +47,7 @@ $config_invoice_from_email = $row['config_invoice_from_email'];
 $config_invoice_late_fee_enable = intval($row['config_invoice_late_fee_enable']);
 $config_invoice_late_fee_percent = floatval($row['config_invoice_late_fee_percent']);
 
-// Recurring
+// Recurring Invoices
 $config_recurring_prefix = $row['config_recurring_prefix'];
 $config_recurring_next_number = intval($row['config_recurring_next_number']);
 
@@ -57,6 +57,10 @@ $config_quote_next_number = intval($row['config_quote_next_number']);
 $config_quote_footer = $row['config_quote_footer'];
 $config_quote_from_name = $row['config_quote_from_name'];
 $config_quote_from_email = $row['config_quote_from_email'];
+
+// Projects
+$config_project_prefix = $row['config_project_prefix'];
+$config_project_next_number = intval($row['config_project_next_number']);
 
 // Tickets
 $config_ticket_prefix = $row['config_ticket_prefix'];
@@ -68,6 +72,7 @@ $config_ticket_client_general_notifications = intval($row['config_ticket_client_
 $config_ticket_autoclose = intval($row['config_ticket_autoclose']);
 $config_ticket_autoclose_hours = intval($row['config_ticket_autoclose_hours']);
 $config_ticket_new_ticket_notification_email = $row['config_ticket_new_ticket_notification_email'];
+$config_ticket_default_billable = intval($row['config_ticket_default_billable']);
 
 // Cron
 $config_enable_cron = intval($row['config_enable_cron']);
@@ -107,6 +112,8 @@ $config_client_portal_enable = intval($row['config_client_portal_enable']);
 $config_login_message = $row['config_login_message'];
 $config_login_key_required = $row['config_login_key_required'];
 $config_login_key_secret = $row['config_login_key_secret'];
+$config_login_remember_me_expire = intval($row['config_login_remember_me_expire']);
+$config_log_retention = intval($row['config_log_retention']);
 
 // Locale
 $config_currency_format = "US_en";
@@ -275,5 +282,13 @@ $start_page_select_array = array (
     'clients.php'=> 'Client Management',
     'tickets.php'=> 'Support Tickets',
     'invoices.php' => 'Invoices'
+);
+
+$rack_type_select_array = array(
+    "Open Wall-Mount",
+    "Enclosed Wall-Mount",
+    "Open Floor-Standing",
+    "Enclosed Floor-Standing",
+    "Other"
 );
 

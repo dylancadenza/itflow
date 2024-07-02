@@ -16,9 +16,58 @@ if (isset($_GET['calendar_id'])) {
         cursor: pointer;
     }
 </style>
-<div class="card">
-    <div id='calendar'></div>
+
+<div class="row">
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header py-2">
+                <h3 class="card-title mt-1">Calendars</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-dark btn-sm" data-toggle="modal" data-target="#addCalendarModal"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+            <div class="card-body">
+                
+                <form>
+                    <?php 
+                    $sql = mysqli_query($mysqli, "SELECT * FROM calendars");
+                    while ($row = mysqli_fetch_array($sql)) {
+                        $calendar_id = intval($row['calendar_id']);
+                        $calendar_name = nullable_htmlentities($row['calendar_name']);
+                        $calendar_color = nullable_htmlentities($row['calendar_color']);
+                    ?>
+                    <div class="form-group">
+                        <i class="fas fa-fw fa-circle mr-2" style="color:<?php echo $calendar_color; ?>;"></i><?php echo $calendar_name; ?>
+                        <button type="button" class="btn btn-link btn-sm float-right" data-toggle="modal" data-target="#editCalendarModal<?php echo $calendar_id; ?>"><i class="fas fa-fw fa-pencil-alt text-secondary"></i></button>
+                    </div>
+                    <?php 
+                    require "calendar_edit_modal.php";
+                    } 
+                    ?>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header py-2">
+                <h3 class="card-title mt-1">System Calendars</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-dark btn-sm"><i class="fas fa-eye"></i></button>
+                </div>
+            </div>
+            <div class="card-body">
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div id='calendar'></div>
+        </div>
+    </div>
+
 </div>
+
 <?php
 
 require_once "calendar_event_add_modal.php";
@@ -32,6 +81,7 @@ while ($row = mysqli_fetch_array($sql)) {
     $event_id = intval($row['event_id']);
     $event_title = nullable_htmlentities($row['event_title']);
     $event_description = nullable_htmlentities($row['event_description']);
+    $event_location = nullable_htmlentities($row['event_location']);
     $event_start = nullable_htmlentities($row['event_start']);
     $event_end = nullable_htmlentities($row['event_end']);
     $event_repeat = nullable_htmlentities($row['event_repeat']);
@@ -58,25 +108,18 @@ while ($row = mysqli_fetch_array($sql)) {
             themeSystem: 'bootstrap',
             defaultView: 'dayGridMonth',
             customButtons: {
-                addEvent: {
-                    text: 'Add Event',
-                    bootstrapFontAwesome: 'fa fa-plus',
+                newEvent: {
+                    text: 'New Event',
+                    bootstrapFontAwesome: 'fas fa-plus',
                     click: function() {
                         $("#addCalendarEventModal").modal();
-                    }
-                },
-                addCalendar: {
-                    text: 'Add Calendar',
-                    bootstrapFontAwesome: 'fa fa-calendar-plus',
-                    click: function() {
-                        $("#addCalendarModal").modal();
                     }
                 }
             },
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth addEvent addCalendar'
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth newEvent'
             },
             <?php if (!$session_mobile) {
             ?>aspectRatio: 2.5,
@@ -146,10 +189,15 @@ while ($row = mysqli_fetch_array($sql)) {
             }
 
             //Tickets Created
-            $sql = mysqli_query($mysqli, "SELECT * FROM clients LEFT JOIN tickets ON client_id = ticket_client_id LEFT JOIN users ON ticket_assigned_to = user_id");
+            $sql = mysqli_query($mysqli, "SELECT * FROM clients
+                LEFT JOIN tickets ON client_id = ticket_client_id
+                LEFT JOIN ticket_statuses ON ticket_status = ticket_status_id
+                LEFT JOIN users ON ticket_assigned_to = user_id"
+            );
             while ($row = mysqli_fetch_array($sql)) {
                 $event_id = intval($row['ticket_id']);
-                $ticket_status = strval($row['ticket_status']);
+                $ticket_status = intval($row['ticket_status']);
+                $ticket_status_name = strval($row['ticket_status_name']);
                 $username = $row['user_name'];
                 if (empty($username)) {
                     $username = "";
@@ -158,14 +206,14 @@ while ($row = mysqli_fetch_array($sql)) {
                     $username = "[". substr($row['user_name'], 0, 9) . "...]";
                 }
 
-                $event_title = json_encode($row['ticket_prefix'] . $row['ticket_number'] . " created - " . $row['ticket_subject'] . " " . $username . "{" . $ticket_status . "}");
+                $event_title = json_encode($row['ticket_prefix'] . $row['ticket_number'] . " created - " . $row['ticket_subject'] . " " . $username . "{" . $ticket_status_name . "}");
                 $event_start = json_encode($row['ticket_created_at']);
 
-                if ($ticket_status == "New") {
+                if ($ticket_status == 1) {
                     $event_color = "red";
-                } elseif ($ticket_status == "Open") {
+                } elseif ($ticket_status == 2) {
                     $event_color = "blue";
-                }  elseif ($ticket_status == "On Hold") {
+                }  elseif ($ticket_status == 3) {
                     $event_color = "grey";
                 } else {
                     $event_color = "black";
@@ -174,8 +222,36 @@ while ($row = mysqli_fetch_array($sql)) {
                 echo "{ id: $event_id, title: $event_title, start: $event_start, color: '$event_color', url: 'ticket.php?ticket_id=$event_id' },";
             }
 
+            // Recurring Tickets
+            $sql = mysqli_query($mysqli, "SELECT * FROM clients
+                LEFT JOIN scheduled_tickets ON client_id = scheduled_ticket_client_id
+                LEFT JOIN users ON scheduled_ticket_assigned_to = user_id"
+            );
+            while ($row = mysqli_fetch_array($sql)) {
+                $event_id = intval($row['scheduled_ticket_id']);
+                $client_id = intval($row['client_id']);
+                $username = $row['user_name'];
+                $frequency = $row['scheduled_ticket_frequency'];
+                if (empty($username)) {
+                    $username = "";
+                } else {
+                    //Limit to  characters and add ...
+                    $username = "[". substr($row['user_name'], 0, 9) . "...]";
+                }
+
+                $event_title = json_encode("R Ticket ($frequency) - " . $row['scheduled_ticket_subject'] . " " . $username);
+                $event_start = json_encode($row['scheduled_ticket_next_run']);
+
+                echo "{ id: $event_id, title: $event_title, start: $event_start, color: '$event_color', url: 'client_recurring_tickets.php?client_id=$client_id' },";
+            }
+
             //Tickets Scheduled
-            $sql = mysqli_query($mysqli, "SELECT * FROM clients LEFT JOIN tickets ON client_id = ticket_client_id LEFT JOIN users ON ticket_assigned_to = user_id WHERE ticket_schedule IS NOT NULL");
+            $sql = mysqli_query($mysqli, "SELECT * FROM clients 
+                LEFT JOIN tickets ON client_id = ticket_client_id
+                LEFT JOIN ticket_statuses ON ticket_status = ticket_status_id
+                LEFT JOIN users ON ticket_assigned_to = user_id
+                WHERE ticket_schedule IS NOT NULL"
+            );
             while ($row = mysqli_fetch_array($sql)) {
                 $event_id = intval($row['ticket_id']);
                 $username = $row['user_name'];
@@ -187,7 +263,7 @@ while ($row = mysqli_fetch_array($sql)) {
                 }
 
                 if (strtotime($row['ticket_schedule']) < time()) {
-                    if ($row['ticket_status'] == 'On Hold') {
+                    if (!empty($row['ticket_schedule'])) {
                         $event_color = "red";
                     } else {
                         $event_color = "green";
@@ -196,7 +272,7 @@ while ($row = mysqli_fetch_array($sql)) {
                     $event_color = "grey";
                 }
 
-                $ticket_status = strval($row['ticket_status']);
+                $ticket_status = strval($row['ticket_status_name']);
                 $event_title = json_encode($row['ticket_prefix'] . $row['ticket_number'] . " scheduled - " . $row['ticket_subject'] . " [" . $username . "]{" . $ticket_status . "}");
                 $event_start = json_encode($row['ticket_schedule']);
 
@@ -227,6 +303,14 @@ while ($row = mysqli_fetch_array($sql)) {
             ?>
         ],
         eventOrder: 'allDay,start,-duration,title',
+
+        <?php
+        // User preference for Calendar start day (Sunday/Monday)
+        // Fetch User Dashboard Settings
+        $row = mysqli_fetch_array(mysqli_query($mysqli, "SELECT user_config_calendar_first_day FROM user_settings WHERE user_id = $session_user_id"));
+        $user_config_calendar_first_day = intval($row['user_config_calendar_first_day']);
+        ?>
+        firstDay: <?php echo $user_config_calendar_first_day ?>,
         });
 
         calendar.render();

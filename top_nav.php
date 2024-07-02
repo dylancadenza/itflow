@@ -10,7 +10,6 @@
     </ul>
 
     <!-- Center navbar links -->
-
     <ul class="navbar-nav ml-auto">
 
         <!-- SEARCH FORM -->
@@ -28,25 +27,7 @@
     </ul>
 
     <!-- Right navbar links -->
-
     <ul class="navbar-nav ml-auto">
-
-        <li class="nav-item">
-            <a class="nav-link" href="https://docs.itflow.org" target="_blank">
-                <i class="fas fa-fw fa-question"></i>
-            </a>
-        </li>
-        <?php if ($config_module_enable_ticketing == 1) { ?>
-            
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-toggle="modal" data-target="#openTicketsModal">
-                    <i class="fas fa-hourglass-half"></i>
-                    <span class="badge" id="runningTicketsCount">0</span>
-                </a>
-            </li>
-           
-        <?php } ?>
-
 
         <!-- New Notifications Dropdown -->
         <?php
@@ -72,17 +53,15 @@
                 </a>
                 <div class="dropdown-divider"></div>
                 <?php
-        while ($row = mysqli_fetch_array($sql_notifications)) {
-            $notification_id = intval($row['notification_id']);
-            $notification_type = nullable_htmlentities($row['notification_type']);
-            $notification = nullable_htmlentities($row['notification']);
-            $notification_action = nullable_htmlentities($row['notification_action']);
-            $notification_timestamp = date('M d g:ia',strtotime($row['notification_timestamp']));
-            $notification_client_id = intval($row['notification_client_id']);
-            if(empty($notification_action)){
-                $notification_action = "#";
-            }
-        ?>
+                while ($row = mysqli_fetch_array($sql_notifications)) {
+                    $notification_id = intval($row['notification_id']);
+                    $notification_type = nullable_htmlentities($row['notification_type']);
+                    $notification = nullable_htmlentities($row['notification']);
+                    $notification_action = nullable_htmlentities($row['notification_action']);
+                    $notification_timestamp = date('M d g:ia',strtotime($row['notification_timestamp']));
+                    $notification_client_id = intval($row['notification_client_id']);
+                    if(empty($notification_action)) { $notification_action = "#"; }
+                ?>
                 <div class="dropdown-item">
                     <a class="text-dark" href="<?php echo $notification_action; ?>">
                         <p class="mb-1">
@@ -94,9 +73,7 @@
                     </a>
                 </div>
 
-                <?php
-        }
-        ?>
+                <?php } ?>
 
                 <div class="dropdown-divider"></div>
                 <a href="post.php?dismiss_all_notifications"
@@ -123,8 +100,8 @@
         </li>
 
         <?php } ?>
-
         <!-- End New Notifications Dropdown -->
+
 
         <li class="nav-item dropdown user-menu">
             <a href="#" class="nav-link" data-toggle="dropdown">
@@ -153,10 +130,8 @@
                 </li>
                 <!-- Menu Footer-->
                 <li class="user-footer">
-                    <a href="user_details.php" class="btn btn-default btn-flat"><i
-                            class="fas fa-cog mr-2"></i>Account</a>
-                    <a href="post.php?logout" class="btn btn-default btn-flat float-right"><i
-                            class="fas fa-sign-out-alt mr-2"></i>Logout</a>
+                    <a href="user_details.php" class="btn btn-default btn-flat"><i class="fas fa-cog mr-2"></i>Account</a>
+                    <a href="post.php?logout" class="btn btn-default btn-flat float-right"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
                 </li>
             </ul>
         </li>
@@ -164,7 +139,7 @@
     </ul>
 </nav>
 
-<?php if ($config_module_enable_ticketing == 1) { 
+<?php if ($config_module_enable_ticketing == 1) {
     include_once "top_nav_tickets_modal.php";
     } ?>
 <!-- /.navbar -->

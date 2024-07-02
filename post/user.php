@@ -18,6 +18,14 @@ if (isset($_POST['add_user'])) {
 
     $user_id = mysqli_insert_id($mysqli);
 
+    // Add Client Access Permissions if set
+    if (!empty($_POST['clients'])) {
+        foreach($_POST['clients'] as $client_id) {
+            $client_id = intval($client_id);
+            mysqli_query($mysqli,"INSERT INTO user_permissions SET user_id = $user_id, client_id = $client_id");
+        }
+    }
+
     if (!file_exists("uploads/users/$user_id/")) {
         mkdir("uploads/users/$user_id");
     }
@@ -104,6 +112,15 @@ if (isset($_POST['edit_user'])) {
 
     $user_id = intval($_POST['user_id']);
     $new_password = trim($_POST['new_password']);
+
+    // Update Client Access
+    mysqli_query($mysqli,"DELETE FROM user_permissions WHERE user_id = $user_id");
+    if (!empty($_POST['clients'])) {
+        foreach($_POST['clients'] as $client_id) {
+            $client_id = intval($client_id);
+            mysqli_query($mysqli,"INSERT INTO user_permissions SET user_id = $user_id, client_id = $client_id");
+        }
+    }
 
     // Get current Avatar
     $sql = mysqli_query($mysqli, "SELECT user_avatar FROM users WHERE user_id = $user_id");
@@ -229,14 +246,13 @@ if (isset($_GET['revoke_remember_me'])) {
     $user_id = intval($_GET['revoke_remember_me']);
 
     // Get User Name
-    $sql = mysqli_query($mysqli, "SELECT * FROM users WHERE user_id = $user_id");
-    $row = mysqli_fetch_array($sql);
+    $row = mysqli_fetch_array(mysqli_query($mysqli, "SELECT * FROM users WHERE user_id = $user_id"));
     $user_name = sanitizeInput($row['user_name']);
 
     mysqli_query($mysqli, "DELETE FROM remember_tokens WHERE remember_token_user_id = $user_id");
 
     //Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name revoked all remember me tokens', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name revoked all remember me tokens for user $user_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $user_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "User <strong>$user_name</strong> remember me tokens revoked";

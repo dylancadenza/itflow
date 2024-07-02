@@ -6,6 +6,35 @@ $order = "DESC";
 
 require_once "inc_all_admin.php";
 
+// User Filter
+if (isset($_GET['user']) & !empty($_GET['user'])) {
+    $user_query = 'AND (log_user_id = ' . intval($_GET['user']) . ')';
+    $user = intval($_GET['user']);
+} else {
+    // Default - any
+    $user_query = '';
+    $user = '';
+}
+
+// Log Type Filter
+if (isset($_GET['type']) & !empty($_GET['type'])) {
+    $log_type_query = "AND (log_type  = '" . sanitizeInput($_GET['type']) . "')";
+    $type = nullable_htmlentities($_GET['type']);
+} else {
+    // Default - any
+    $log_type_query = '';
+    $type = '';
+}
+
+// Log Action Filter
+if (isset($_GET['action']) & !empty($_GET['action'])) {
+    $log_action_query = "AND (log_action  = '" . sanitizeInput($_GET['action']) . "')";
+    $action = nullable_htmlentities($_GET['action']);
+} else {
+    // Default - any
+    $log_action_query = '';
+    $action = '';
+}
 
 //Rebuild URL
 $url_query_strings_sort = http_build_query($get_copy);
@@ -17,6 +46,9 @@ $sql = mysqli_query(
   LEFT JOIN clients ON log_client_id = client_id
   WHERE (log_type LIKE '%$q%' OR log_action LIKE '%$q%' OR log_description LIKE '%$q%' OR log_ip LIKE '%$q%' OR log_user_agent LIKE '%$q%' OR user_name LIKE '%$q%' OR client_name LIKE '%$q%')
   AND DATE(log_created_at) BETWEEN '$dtf' AND '$dtt'
+  $user_query
+  $log_type_query
+  $log_action_query
   ORDER BY $sort $order LIMIT $record_from, $record_to"
 );
 
@@ -40,13 +72,70 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                             </div>
                         </div>
                     </div>
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <select class="form-control select2" name="user" onchange="this.form.submit()">
+                                <option value="" <?php if ($user == "") { echo "selected"; } ?>>- All Users -</option>
+
+                                <?php
+                                $sql_users_filter = mysqli_query($mysqli, "SELECT * FROM users ORDER BY user_name ASC");
+                                while ($row = mysqli_fetch_array($sql_users_filter)) {
+                                    $user_id = intval($row['user_id']);
+                                    $user_name = nullable_htmlentities($row['user_name']);
+                                ?>
+                                    <option <?php if ($user == $user_id) { echo "selected"; } ?> value="<?php echo $user_id; ?>"><?php echo $user_name; ?></option>
+                                <?php
+                                }
+                                ?>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <select class="form-control select2" name="type" onchange="this.form.submit()">
+                                <option value="" <?php if ($type == "") { echo "selected"; } ?>>- All Types -</option>
+
+                                <?php
+                                $sql_types_filter = mysqli_query($mysqli, "SELECT DISTINCT log_type FROM logs ORDER BY log_type ASC");
+                                while ($row = mysqli_fetch_array($sql_types_filter)) {
+                                    $log_type = nullable_htmlentities($row['log_type']);
+                                ?>
+                                    <option <?php if ($type == $log_type) { echo "selected"; } ?>><?php echo $log_type; ?></option>
+                                <?php
+                                }
+                                ?>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <select class="form-control select2" name="action" onchange="this.form.submit()">
+                                <option value="" <?php if ($action == "") { echo "selected"; } ?>>- All Actions -</option>
+
+                                <?php
+                                $sql_actions_filter = mysqli_query($mysqli, "SELECT DISTINCT log_action FROM logs ORDER BY log_action ASC");
+                                while ($row = mysqli_fetch_array($sql_actions_filter)) {
+                                    $log_action = nullable_htmlentities($row['log_action']);
+                                ?>
+                                    <option <?php if ($action == $log_action) { echo "selected"; } ?>><?php echo $log_action; ?></option>
+                                <?php
+                                }
+                                ?>
+
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="collapse mt-3 <?php if (!empty($_GET['dtf'])) { echo "show"; } ?>" id="advancedFilter">
+                <div class="collapse mt-3 <?php if (!empty($_GET['dtf']) || $_GET['canned_date'] !== "custom" ) { echo "show"; } ?>" id="advancedFilter">
                     <div class="row">
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label>Canned Date</label>
-                                <select class="form-control select2" name="canned_date">
+                                <select onchange="this.form.submit()" class="form-control select2" name="canned_date">
                                     <option <?php if ($_GET['canned_date'] == "custom") { echo "selected"; } ?> value="">Custom</option>
                                     <option <?php if ($_GET['canned_date'] == "today") { echo "selected"; } ?> value="today">Today</option>
                                     <option <?php if ($_GET['canned_date'] == "yesterday") { echo "selected"; } ?> value="yesterday">Yesterday</option>
@@ -62,13 +151,13 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label>Date From</label>
-                                <input type="date" class="form-control" name="dtf" max="2999-12-31" value="<?php echo nullable_htmlentities($dtf); ?>">
+                                <input onchange="this.form.submit()" type="date" class="form-control" name="dtf" max="2999-12-31" value="<?php echo nullable_htmlentities($dtf); ?>">
                             </div>
                         </div>
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label>Date To</label>
-                                <input type="date" class="form-control" name="dtt" max="2999-12-31" value="<?php echo nullable_htmlentities($dtt); ?>">
+                                <input onchange="this.form.submit()" type="date" class="form-control" name="dtt" max="2999-12-31" value="<?php echo nullable_htmlentities($dtt); ?>">
                             </div>
                         </div>
                     </div>

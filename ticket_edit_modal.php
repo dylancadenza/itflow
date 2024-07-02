@@ -11,6 +11,8 @@
                 <input type="hidden" name="ticket_id" value="<?php echo $ticket_id; ?>">
                 <input type="hidden" name="client_id" value="<?php echo $client_id; ?>">
                 <input type="hidden" name="ticket_number" value="<?php echo "$ticket_prefix$ticket_number"; ?>">
+                <input type="hidden" name="contact_notify" value="0"> <!-- Default 0 -->
+                <input type="hidden" name="billable" value="0">
                 <div class="modal-body bg-white">
 
                     <ul class="nav nav-pills nav-justified mb-3">
@@ -18,13 +20,19 @@
                             <a class="nav-link active" data-toggle="pill" href="#pills-details<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-life-ring mr-2"></i>Details</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-toggle="pill" href="#pills-contacts<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-users mr-2"></i>Contacts</a>
+                            <a class="nav-link" data-toggle="pill" href="#pills-contacts<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-users mr-2"></i>Contact</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-toggle="pill" href="#pills-assets<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-desktop mr-2"></i>Assets</a>
+                            <a class="nav-link" data-toggle="pill" href="#pills-assets<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-desktop mr-2"></i>Asset</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-toggle="pill" href="#pills-vendors<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-building mr-2"></i>Vendors</a>
+                            <a class="nav-link" data-toggle="pill" href="#pills-locations<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-map-marker-alt mr-2"></i>Location</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#pills-vendors<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-building mr-2"></i>Vendor</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#pills-project<?php echo $ticket_id; ?>"><i class="fa fa-fw fa-project-diagram mr-2"></i>Project</a>
                         </li>
                     </ul>
 
@@ -48,36 +56,56 @@
                                 <textarea class="form-control tinymce" rows="8" name="details"><?php echo $ticket_details; ?></textarea>
                             </div>
 
-                            <div class="form-group">
-                                <label>Priority <strong class="text-danger">*</strong></label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fa fa-fw fa-thermometer-half"></i></span>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label>Priority <strong class="text-danger">*</strong></label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fa fa-fw fa-thermometer-half"></i></span>
+                                            </div>
+                                            <select class="form-control select2" name="priority" required>
+                                                <option <?php if ($ticket_priority == 'Low') { echo "selected"; } ?> >Low</option>
+                                                <option <?php if ($ticket_priority == 'Medium') { echo "selected"; } ?> >Medium</option>
+                                                <option <?php if ($ticket_priority == 'High') { echo "selected"; } ?> >High</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <select class="form-control select2" name="priority" required>
-                                        <option <?php if ($ticket_priority == 'Low') { echo "selected"; } ?> >Low</option>
-                                        <option <?php if ($ticket_priority == 'Medium') { echo "selected"; } ?> >Medium</option>
-                                        <option <?php if ($ticket_priority == 'High') { echo "selected"; } ?> >High</option>
-                                    </select>
+                                </div>
+
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label>Category</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fa fa-fw fa-layer-group"></i></span>
+                                            </div>
+                                            <select class="form-control select2" name="category">
+                                                <option value="">- Ticket Category -</option>
+                                                <?php
+                                                $sql_categories = mysqli_query($mysqli, "SELECT * FROM categories WHERE category_type = 'Ticket' AND categories.category_archived_at IS NULL");
+                                                while ($row = mysqli_fetch_array($sql_categories)) {
+                                                    $category_id = intval($row['category_id']);
+                                                    $category_name = nullable_htmlentities($row['category_name']);
+
+                                                    ?>
+                                                    <option <?php if ($ticket_category == $category_id) {echo "selected";} ?> value="<?php echo $category_id; ?>"><?php echo $category_name; ?></option>
+                                                <?php } ?>
+
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <?php if ($config_module_enable_accounting) {
-                                ?>
+                            <?php if ($config_module_enable_accounting) { ?>
                             <div class="form-group">
-                                <label>Billable</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fa fa-fw fa-money-bill"></i></span>
-                                    </div>
-                                    <select class="form-control" name="billable">
-                                        <option <?php if ($ticket_billable == 1) { echo "selected"; } ?> value="1">Yes</option>
-                                        <option <?php if ($ticket_billable == 0) { echo "selected"; } ?> value="0">No</option>
-                                    </select>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="billable" <?php if ($ticket_billable == 1) { echo "checked"; } ?> value="1" id="billableSwitch<?php echo $ticket_id; ?>">
+                                    <label class="custom-control-label" for="billableSwitch<?php echo $ticket_id; ?>">Mark Billable</label>
                                 </div>
                             </div>
                             <?php } ?>
-
 
                         </div>
 
@@ -114,13 +142,24 @@
                                             } else {
                                                 $contact_title_display_select = "";
                                             }
-                                            
+
                                             ?>
                                             <option value="<?php echo $contact_id_select; ?>" <?php if ($contact_id_select  == $contact_id) { echo "selected"; } ?>><?php echo "$contact_name_select$contact_title_display_select$contact_primary_display_select$contact_technical_display_select"; ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
                             </div>
+
+                            <?php if (!empty($config_smtp_host)) { ?>
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="contact_notify" value="1" id="checkNotifyContact">
+                                        <label class="form-check-label" for="checkNotifyContact">
+                                            Send email notification
+                                        </label>
+                                    </div>
+                                </div>
+                            <?php } ?>
 
                         </div>
 
@@ -143,6 +182,34 @@
                                             $asset_contact_name_select = nullable_htmlentities($row['contact_name']);
                                             ?>
                                             <option <?php if ($asset_id == $asset_id_select) { echo "selected"; } ?> value="<?php echo $asset_id_select; ?>"><?php echo "$asset_name_select - $asset_contact_name_select"; ?></option>
+
+                                            <?php
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="tab-pane fade" id="pills-locations<?php echo $ticket_id; ?>">
+
+                            <div class="form-group">
+                                <label>Location</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fa fa-fw fa-map-marker-alt"></i></span>
+                                    </div>
+                                    <select class="form-control select2" name="location">
+                                        <option value="0">- None -</option>
+                                        <?php
+
+                                        $sql_locations = mysqli_query($mysqli, "SELECT * FROM locations WHERE location_client_id = $client_id AND location_archived_at IS NULL ORDER BY location_name ASC");
+                                        while ($row = mysqli_fetch_array($sql_locations)) {
+                                            $location_id_select = intval($row['location_id']);
+                                            $location_name_select = nullable_htmlentities($row['location_name']);
+                                            ?>
+                                            <option <?php if ($location_id == $location_id_select) { echo "selected"; } ?> value="<?php echo $location_id_select; ?>"><?php echo $location_name_select; ?></option>
 
                                             <?php
                                         }
@@ -186,6 +253,31 @@
                                         <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
                                     </div>
                                     <input type="text" class="form-control" name="vendor_ticket_number" placeholder="Vendor ticket number" value="<?php echo $ticket_vendor_ticket_number; ?>">
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="tab-pane fade" id="pills-project<?php echo $ticket_id; ?>">
+
+                            <div class="form-group">
+                                <label>Project</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fa fa-fw fa-project-diagram"></i></span>
+                                    </div>
+                                    <select class="form-control select2" name="project">
+                                        <option value="0">- None -</option>
+                                        <?php
+
+                                        $sql_projects = mysqli_query($mysqli, "SELECT * FROM projects WHERE project_client_id = $client_id AND project_completed_at IS NULL AND project_archived_at IS NULL ORDER BY project_name ASC");
+                                        while ($row = mysqli_fetch_array($sql_projects)) {
+                                            $project_id_select = intval($row['project_id']);
+                                            $project_name_select = nullable_htmlentities($row['project_name']); ?>
+                                            <option <?php if ($project_id == $project_id_select) { echo "selected"; } ?> value="<?php echo $project_id_select; ?>"><?php echo $project_name_select; ?></option>
+
+                                        <?php } ?>
+                                    </select>
                                 </div>
                             </div>
 

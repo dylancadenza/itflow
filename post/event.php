@@ -22,12 +22,29 @@ if (isset($_POST['add_calendar'])) {
 
 }
 
+if (isset($_POST['edit_calendar'])) {
+
+    $calendar_id = intval($_POST['calendar_id']);
+    $name = sanitizeInput($_POST['name']);
+    $color = sanitizeInput($_POST['color']);
+
+    mysqli_query($mysqli,"UPDATE calendars SET calendar_name = '$name', calendar_color = '$color' WHERE calendar_id = $calendar_id");
+
+    //Logging
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Calendar', log_action = 'Edit', log_description = '$session_name Edited calendar $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $calendar_id");
+
+    $_SESSION['alert_message'] = "Calendar <strong>$name</strong> edited";
+
+    header("Location: " . $_SERVER["HTTP_REFERER"]);
+
+}
+
 if (isset($_POST['add_event'])) {
 
     require_once 'post/event_model.php';
 
 
-    mysqli_query($mysqli,"INSERT INTO events SET event_title = '$title', event_description = '$description', event_start = '$start', event_end = '$end', event_repeat = '$repeat', event_calendar_id = $calendar_id, event_client_id = $client");
+    mysqli_query($mysqli,"INSERT INTO events SET event_title = '$title', event_location = '$location', event_description = '$description', event_start = '$start', event_end = '$end', event_repeat = '$repeat', event_calendar_id = $calendar_id, event_client_id = $client");
 
     $event_id = mysqli_insert_id($mysqli);
 
@@ -103,7 +120,7 @@ if (isset($_POST['edit_event'])) {
 
     $event_id = intval($_POST['event_id']);
 
-    mysqli_query($mysqli,"UPDATE events SET event_title = '$title', event_description = '$description', event_start = '$start', event_end = '$end', event_repeat = '$repeat', event_calendar_id = $calendar_id, event_client_id = $client WHERE event_id = $event_id");
+    mysqli_query($mysqli,"UPDATE events SET event_title = '$title', event_location = '$location', event_description = '$description', event_start = '$start', event_end = '$end', event_repeat = '$repeat', event_calendar_id = $calendar_id, event_client_id = $client WHERE event_id = $event_id");
 
     //If email is checked
     if ($email_event == 1) {

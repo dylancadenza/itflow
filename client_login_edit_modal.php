@@ -2,7 +2,7 @@
     <div class="modal-dialog">
         <div class="modal-content bg-dark">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-fw fa-key mr-2"></i>Editing login: <strong><?php echo $login_name; ?></strong></h5>
+                <h5 class="modal-title"><i class="fa fa-fw fa-key mr-2"></i>Editing credential: <strong><?php echo $login_name; ?></strong></h5>
                 <button type="button" class="close text-white" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
@@ -56,22 +56,22 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Username</label>
+                                <label>Username / ID</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
                                     </div>
-                                    <input type="text" class="form-control" name="username" placeholder="Username" value="<?php echo $login_username; ?>">
+                                    <input type="text" class="form-control" name="username" placeholder="Username or ID" value="<?php echo $login_username; ?>">
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label>Password <strong class="text-danger">*</strong></label>
+                                <label>Password / Key <strong class="text-danger">*</strong></label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
                                     </div>
-                                    <input type="password" class="form-control" data-toggle="password" name="password" placeholder="Password" value="<?php echo $login_password; ?>" required autocomplete="new-password">
+                                    <input type="password" class="form-control" data-toggle="password" name="password" placeholder="Password or Key" value="<?php echo $login_password; ?>" required autocomplete="new-password">
                                     <div class="input-group-append">
                                         <span class="input-group-text"><i class="fa fa-fw fa-eye"></i></span>
                                     </div>

@@ -27,7 +27,7 @@ if (isset($_POST['add_client'])) {
     $extended_log_description = '';
 
     // Create client
-    mysqli_query($mysqli, "INSERT INTO clients SET client_name = '$name', client_type = '$type', client_website = '$website', client_referral = '$referral', client_rate = $rate, client_currency_code = '$currency_code', client_net_terms = $net_terms, client_tax_id_number = '$tax_id_number', client_lead = $lead, client_notes = '$notes', client_accessed_at = NOW()");
+    mysqli_query($mysqli, "INSERT INTO clients SET client_name = '$name', client_type = '$type', client_website = '$website', client_referral = '$referral', client_rate = $rate, client_currency_code = '$currency_code', client_net_terms = $net_terms, client_tax_id_number = '$tax_id_number', client_lead = $lead, client_abbreviation = '$abbreviation', client_notes = '$notes', client_accessed_at = NOW()");
 
     $client_id = mysqli_insert_id($mysqli);
 
@@ -65,7 +65,7 @@ if (isset($_POST['add_client'])) {
     if (isset($_POST['tags'])) {
         foreach($_POST['tags'] as $tag) {
             $tag = intval($tag);
-            mysqli_query($mysqli, "INSERT INTO client_tags SET client_tag_client_id = $client_id, client_tag_tag_id = $tag");
+            mysqli_query($mysqli, "INSERT INTO client_tags SET client_id = $client_id, tag_id = $tag");
         }
     }
 
@@ -123,7 +123,7 @@ if (isset($_POST['edit_client'])) {
 
     $client_id = intval($_POST['client_id']);
 
-    mysqli_query($mysqli, "UPDATE clients SET client_name = '$name', client_type = '$type', client_website = '$website', client_referral = '$referral', client_rate = $rate, client_currency_code = '$currency_code', client_net_terms = $net_terms, client_tax_id_number = '$tax_id_number', client_lead = $lead, client_notes = '$notes' WHERE client_id = $client_id");
+    mysqli_query($mysqli, "UPDATE clients SET client_name = '$name', client_type = '$type', client_website = '$website', client_referral = '$referral', client_rate = $rate, client_currency_code = '$currency_code', client_net_terms = $net_terms, client_tax_id_number = '$tax_id_number', client_lead = $lead, client_abbreviation = '$abbreviation', client_notes = '$notes' WHERE client_id = $client_id");
 
     // Create Referral if it doesn't exist
     $sql = mysqli_query($mysqli, "SELECT category_name FROM categories WHERE category_type = 'Referral' AND category_archived_at IS NULL AND category_name = '$referral'");
@@ -135,12 +135,12 @@ if (isset($_POST['edit_client'])) {
 
     // Tags
     // Delete existing tags
-    mysqli_query($mysqli, "DELETE FROM client_tags WHERE client_tag_client_id = $client_id");
+    mysqli_query($mysqli, "DELETE FROM client_tags WHERE client_id = $client_id");
 
     // Add new tags
     foreach($_POST['tags'] as $tag) {
         $tag = intval($tag);
-        mysqli_query($mysqli, "INSERT INTO client_tags SET client_tag_client_id = $client_id, client_tag_tag_id = $tag");
+        mysqli_query($mysqli, "INSERT INTO client_tags SET client_id = $client_id, tag_id = $tag");
     }
 
     // Logging
@@ -208,11 +208,24 @@ if (isset($_GET['delete_client'])) {
 
     // Delete Client Data
     mysqli_query($mysqli, "DELETE FROM api_keys WHERE api_key_client_id = $client_id");
-    mysqli_query($mysqli, "DELETE FROM assets WHERE asset_client_id = $client_id");
     mysqli_query($mysqli, "DELETE FROM certificates WHERE certificate_client_id = $client_id");
-    mysqli_query($mysqli, "DELETE FROM client_tags WHERE client_tag_client_id = $client_id");
-    mysqli_query($mysqli, "DELETE FROM contacts WHERE contact_client_id = $client_id");
     mysqli_query($mysqli, "DELETE FROM documents WHERE document_client_id = $client_id");
+
+    // Delete Contacts and contact tags
+    $sql = mysqli_query($mysqli, "SELECT contact_id FROM contacts WHERE contact_client_id = $client_id");
+    while($row = mysqli_fetch_array($sql)) {
+        $contact_id = $row['contact_id'];
+        mysqli_query($mysqli, "DELETE FROM contact_tags WHERE contact_id = $contact_id");
+    }
+    mysqli_query($mysqli, "DELETE FROM contacts WHERE contact_client_id = $client_id");
+
+    // Delete Assets and Interfaces
+    $sql = mysqli_query($mysqli, "SELECT asset_id FROM assets WHERE asset_client_id = $client_id");
+    while($row = mysqli_fetch_array($sql)) {
+        $asset_id = $row['asset_id'];
+        mysqli_query($mysqli, "DELETE FROM asset_interfaces WHERE interface_asset_id = $asset_id");
+    }
+    mysqli_query($mysqli, "DELETE FROM assets WHERE asset_client_id = $client_id");
 
     // Delete Domains and associated records
     $sql = mysqli_query($mysqli, "SELECT domain_id FROM domains WHERE domain_client_id = $client_id");
@@ -236,13 +249,20 @@ if (isset($_GET['delete_client'])) {
     }
     mysqli_query($mysqli, "DELETE FROM invoices WHERE invoice_client_id = $client_id");
 
+    // Delete Locations and location tags
+    $sql = mysqli_query($mysqli, "SELECT location_id FROM locations WHERE location_client_id = location_id");
+    while($row = mysqli_fetch_array($sql)) {
+        $location_id = $row['location_id'];
+        mysqli_query($mysqli, "DELETE FROM location_tags WHERE location_id = $location_id");
+    }
     mysqli_query($mysqli, "DELETE FROM locations WHERE location_client_id = $client_id");
+
     mysqli_query($mysqli, "DELETE FROM logins WHERE login_client_id = $client_id");
     mysqli_query($mysqli, "DELETE FROM logs WHERE log_client_id = $client_id");
     mysqli_query($mysqli, "DELETE FROM networks WHERE network_client_id = $client_id");
     mysqli_query($mysqli, "DELETE FROM notifications WHERE notification_client_id = $client_id");
 
-    //Delete Quote  and related items
+    //Delete Quote and related items
     $sql = mysqli_query($mysqli, "SELECT quote_id FROM quotes WHERE quote_client_id = $client_id");
     while($row = mysqli_fetch_array($sql)) {
         $quote_id = $row['quote_id'];
@@ -296,6 +316,9 @@ if (isset($_GET['delete_client'])) {
     mysqli_query($mysqli, "DELETE FROM tickets WHERE ticket_client_id = $client_id");
     mysqli_query($mysqli, "DELETE FROM trips WHERE trip_client_id = $client_id");
     mysqli_query($mysqli, "DELETE FROM vendors WHERE vendor_client_id = $client_id");
+
+    // Delete tags
+    mysqli_query($mysqli, "DELETE FROM client_tags WHERE client_id = $client_id");
 
     //Delete Client Files
     removeDirectory('uploads/clients/$client_id');
@@ -402,15 +425,16 @@ if (isset($_POST['export_client_pdf'])) {
     $sql_assets = mysqli_query($mysqli,"SELECT * FROM assets 
         LEFT JOIN contacts ON asset_contact_id = contact_id 
         LEFT JOIN locations ON asset_location_id = location_id
+        LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1
         WHERE asset_client_id = $client_id
         AND asset_archived_at IS NULL
         ORDER BY asset_type ASC"
     );
-    $sql_asset_workstations = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN contacts ON asset_contact_id = contact_id LEFT JOIN locations ON asset_location_id = location_id WHERE asset_client_id = $client_id AND (asset_type = 'desktop' OR asset_type = 'laptop') AND asset_archived_at IS NULL ORDER BY asset_name ASC");
-    $sql_asset_servers = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN locations ON asset_location_id = location_id WHERE asset_client_id = $client_id AND asset_type = 'server' AND asset_archived_at IS NULL ORDER BY asset_name ASC");
-    $sql_asset_vms = mysqli_query($mysqli,"SELECT * FROM assets WHERE asset_client_id = $client_id AND asset_type = 'virtual machine' AND asset_archived_at IS NULL ORDER BY asset_name ASC");
-    $sql_asset_network = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN locations ON asset_location_id = location_id WHERE asset_client_id = $client_id AND (asset_type = 'Firewall/Router' OR asset_type = 'Switch' OR asset_type = 'Access Point') AND asset_archived_at IS NULL ORDER BY asset_type ASC");
-    $sql_asset_other = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN contacts ON asset_contact_id = contact_id LEFT JOIN locations ON asset_location_id = location_id WHERE asset_client_id = $client_id AND (asset_type NOT LIKE 'laptop' AND asset_type NOT LIKE 'desktop' AND asset_type NOT LIKE 'server' AND asset_type NOT LIKE 'virtual machine' AND asset_type NOT LIKE 'firewall/router' AND asset_type NOT LIKE 'switch' AND asset_type NOT LIKE 'access point') AND asset_archived_at IS NULL ORDER BY asset_type ASC");
+    $sql_asset_workstations = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN contacts ON asset_contact_id = contact_id LEFT JOIN locations ON asset_location_id = location_id LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 WHERE asset_client_id = $client_id AND (asset_type = 'desktop' OR asset_type = 'laptop') AND asset_archived_at IS NULL ORDER BY asset_name ASC");
+    $sql_asset_servers = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN locations ON asset_location_id = location_id LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 WHERE asset_client_id = $client_id AND asset_type = 'server' AND asset_archived_at IS NULL ORDER BY asset_name ASC");
+    $sql_asset_vms = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 WHERE asset_client_id = $client_id AND asset_type = 'virtual machine' AND asset_archived_at IS NULL ORDER BY asset_name ASC");
+    $sql_asset_network = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN locations ON asset_location_id = location_id LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 WHERE asset_client_id = $client_id AND (asset_type = 'Firewall/Router' OR asset_type = 'Switch' OR asset_type = 'Access Point') AND asset_archived_at IS NULL ORDER BY asset_type ASC");
+    $sql_asset_other = mysqli_query($mysqli,"SELECT * FROM assets LEFT JOIN contacts ON asset_contact_id = contact_id LEFT JOIN locations ON asset_location_id = location_id LEFT JOIN asset_interfaces ON interface_asset_id = asset_id AND interface_primary = 1 WHERE asset_client_id = $client_id AND (asset_type NOT LIKE 'laptop' AND asset_type NOT LIKE 'desktop' AND asset_type NOT LIKE 'server' AND asset_type NOT LIKE 'virtual machine' AND asset_type NOT LIKE 'firewall/router' AND asset_type NOT LIKE 'switch' AND asset_type NOT LIKE 'access point') AND asset_archived_at IS NULL ORDER BY asset_type ASC");
     $sql_networks = mysqli_query($mysqli,"SELECT * FROM networks WHERE network_client_id = $client_id AND network_archived_at IS NULL ORDER BY network_name ASC");
     $sql_domains = mysqli_query($mysqli,"SELECT * FROM domains WHERE domain_client_id = $client_id AND domain_archived_at IS NULL ORDER BY domain_name ASC");
     $sql_certficates = mysqli_query($mysqli,"SELECT * FROM certificates WHERE certificate_client_id = $client_id AND certificate_archived_at IS NULL ORDER BY certificate_name ASC");
@@ -731,7 +755,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Logins Start
                 <?php if(mysqli_num_rows($sql_logins) > 0 && $export_logins == 1){ ?>
                 {
-                    text: 'Logins',
+                    text: 'Credentials',
                     style: 'title'
                 },
 
@@ -876,8 +900,8 @@ if (isset($_POST['export_client_pdf'])) {
                             $asset_model = $row['asset_model'];
                             $asset_serial = $row['asset_serial'];
                             $asset_os = $row['asset_os'];
-                            $asset_ip = $row['asset_ip'];
-                            $asset_mac = $row['asset_mac'];
+                            $asset_ip = $row['interface_ip'];
+                            $asset_mac = $row['interface_mac'];
                             $asset_purchase_date = $row['asset_purchase_date'];
                             $asset_warranty_expire = $row['asset_warranty_expire'];
                             $asset_install_date = $row['asset_install_date'];
@@ -995,8 +1019,8 @@ if (isset($_POST['export_client_pdf'])) {
                             $asset_model = $row['asset_model'];
                             $asset_serial = $row['asset_serial'];
                             $asset_os = $row['asset_os'];
-                            $asset_ip = $row['asset_ip'];
-                            $asset_mac = $row['asset_mac'];
+                            $asset_ip = $row['interface_ip'];
+                            $asset_mac = $row['interface_mac'];
                             $asset_purchase_date = $row['asset_purchase_date'];
                             $asset_warranty_expire = $row['asset_warranty_expire'];
                             $asset_install_date = $row['asset_install_date'];
@@ -1089,8 +1113,8 @@ if (isset($_POST['export_client_pdf'])) {
                             $asset_model = $row['asset_model'];
                             $asset_serial = $row['asset_serial'];
                             $asset_os = $row['asset_os'];
-                            $asset_ip = $row['asset_ip'];
-                            $asset_mac = $row['asset_mac'];
+                            $asset_ip = $row['interface_ip'];
+                            $asset_mac = $row['interface_mac'];
                             $asset_purchase_date = $row['asset_purchase_date'];
                             $asset_warranty_expire = $row['asset_warranty_expire'];
                             $asset_install_date = $row['asset_install_date'];
@@ -1182,8 +1206,8 @@ if (isset($_POST['export_client_pdf'])) {
                             $asset_model = $row['asset_model'];
                             $asset_serial = $row['asset_serial'];
                             $asset_os = $row['asset_os'];
-                            $asset_ip = $row['asset_ip'];
-                            $asset_mac = $row['asset_mac'];
+                            $asset_ip = $row['interface_ip'];
+                            $asset_mac = $row['interface_mac'];
                             $asset_purchase_date = $row['asset_purchase_date'];
                             $asset_warranty_expire = $row['asset_warranty_expire'];
                             $asset_install_date = $row['asset_install_date'];
@@ -1296,8 +1320,8 @@ if (isset($_POST['export_client_pdf'])) {
                             $asset_model = $row['asset_model'];
                             $asset_serial = $row['asset_serial'];
                             $asset_os = $row['asset_os'];
-                            $asset_ip = $row['asset_ip'];
-                            $asset_mac = $row['asset_mac'];
+                            $asset_ip = $row['interface_ip'];
+                            $asset_mac = $row['interface_mac'];
                             $asset_purchase_date = $row['asset_purchase_date'];
                             $asset_warranty_expire = $row['asset_warranty_expire'];
                             $asset_install_date = $row['asset_install_date'];

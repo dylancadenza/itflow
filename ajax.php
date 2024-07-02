@@ -19,37 +19,22 @@ require_once "rfc6238.php";
  * Fetches SSL certificates from remote hosts & returns the relevant info (issuer, expiry, public key)
  */
 if (isset($_GET['certificate_fetch_parse_json_details'])) {
+
     // PHP doesn't appreciate attempting SSL sockets to non-existent domains
     if (empty($_GET['domain'])) {
         exit();
     }
-    $domain = $_GET['domain'];
 
-    // FQDNs in database shouldn't have a URL scheme, adding one
-    $domain = "https://".$domain;
+    $name = $_GET['domain'];
 
-    // Parse host and port
-    $url = parse_url($domain, PHP_URL_HOST);
-    $port = parse_url($domain, PHP_URL_PORT);
-    // Default port
-    if (!$port) {
-        $port = "443";
-    }
+    // Get SSL cert for domain (if exists)
+    $certificate = getSSL($name);
 
-    // Get certificate (using verify peer false to allow for self-signed certs)
-    $socket = "ssl://$url:$port";
-    $get = stream_context_create(array("ssl" => array("capture_peer_cert" => true, "verify_peer" => false,)));
-    $read = stream_socket_client($socket, $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $get);
-    $cert = stream_context_get_params($read);
-    $cert_public_key_obj = openssl_x509_parse($cert['options']['ssl']['peer_certificate']);
-    openssl_x509_export($cert['options']['ssl']['peer_certificate'], $export);
-
-    // Process data
-    if ($cert_public_key_obj) {
+    if ($certificate['success'] == "TRUE") {
         $response['success'] = "TRUE";
-        $response['expire'] = date('Y-m-d', $cert_public_key_obj['validTo_time_t']);
-        $response['issued_by'] = strip_tags($cert_public_key_obj['issuer']['O']);
-        $response['public_key'] = $export; //nl2br
+        $response['expire'] = $certificate['expire'];
+        $response['issued_by'] = $certificate['issued_by'];
+        $response['public_key'] = $certificate['public_key'];
     } else {
         $response['success'] = "FALSE";
     }
@@ -98,7 +83,7 @@ if (isset($_GET['domain_get_json_details'])) {
     }
 
     // Get all registrars/webhosts (vendors) for this client that could be linked to this domain
-    $vendor_sql = mysqli_query($mysqli, "SELECT vendor_id, vendor_name FROM vendors WHERE vendor_client_id = $client_id");
+    $vendor_sql = mysqli_query($mysqli, "SELECT vendor_id, vendor_name FROM vendors WHERE vendor_client_id = $client_id AND vendor_archived_at IS NULL ORDER BY vendor_name ASC");
     while ($row = mysqli_fetch_array($vendor_sql)) {
         $response['vendors'][] = $row;
     }
@@ -114,13 +99,15 @@ if (isset($_GET['merge_ticket_get_json_details'])) {
 
     $merge_into_ticket_number = intval($_GET['merge_into_ticket_number']);
 
-    $sql = mysqli_query($mysqli, "SELECT ticket_id, ticket_number, ticket_prefix, ticket_subject, ticket_priority, ticket_status, client_name, contact_name FROM tickets
-      LEFT JOIN clients ON ticket_client_id = client_id 
-      LEFT JOIN contacts ON ticket_contact_id = contact_id
-      WHERE ticket_number = $merge_into_ticket_number");
+    $sql = mysqli_query($mysqli, "SELECT ticket_id, ticket_number, ticket_prefix, ticket_subject, ticket_priority, ticket_status, ticket_status_name, client_name, contact_name FROM tickets
+        LEFT JOIN clients ON ticket_client_id = client_id 
+        LEFT JOIN contacts ON ticket_contact_id = contact_id
+        LEFT JOIN ticket_statuses ON ticket_status = ticket_status_id
+        WHERE ticket_number = $merge_into_ticket_number");
 
     if (mysqli_num_rows($sql) == 0) {
         //Do nothing.
+        echo "No ticket found!";
     } else {
         //Return ticket, client and contact details for the given ticket number
         $response = mysqli_fetch_array($sql);
@@ -221,10 +208,10 @@ if (isset($_GET['ticket_query_views'])) {
         $users = array_unique($users);
         if (count($users) > 1) {
             // Multiple viewers
-            $response['message'] = nullable_htmlentities(implode(", ", $users) . " are viewing this ticket.");
+            $response['message'] = "<i class='fas fa-fw fa-eye mr-2'></i>" . nullable_htmlentities(implode(", ", $users) . " are viewing this ticket.");
         } else {
             // Single viewer
-            $response['message'] = nullable_htmlentities(implode("", $users) . " is viewing this ticket.");
+            $response['message'] = "<i class='fas fa-fw fa-eye mr-2'></i>" . nullable_htmlentities(implode("", $users) . " is viewing this ticket.");
         }
     } else {
         // No viewers

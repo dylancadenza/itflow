@@ -8,6 +8,7 @@
                 </button>
             </div>
             <form action="post.php" method="post" autocomplete="off">
+                <input type="hidden" name="billable" value="0">
                 <div class="modal-body bg-white">
 
                     <?php if (isset($_GET['client_id'])) { ?>
@@ -16,13 +17,22 @@
                                 <a class="nav-link active" data-toggle="pill" href="#pills-details"><i class="fa fa-fw fa-life-ring mr-2"></i>Details</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-toggle="pill" href="#pills-contacts"><i class="fa fa-fw fa-users mr-2"></i>Contacts</a>
+                                <a class="nav-link" data-toggle="pill" href="#pills-contacts"><i class="fa fa-fw fa-users mr-2"></i>Contact</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-toggle="pill" href="#pills-assets"><i class="fa fa-fw fa-desktop mr-2"></i>Assets</a>
+                                <a class="nav-link" data-toggle="pill" href="#pills-assets"><i class="fa fa-fw fa-desktop mr-2"></i>Asset</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-toggle="pill" href="#pills-vendors"><i class="fa fa-fw fa-building mr-2"></i>Vendors</a>
+                                <a class="nav-link" data-toggle="pill" href="#pills-locations"><i class="fa fa-fw fa-map-marker-alt mr-2"></i>Location</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="pill" href="#pills-vendors"><i class="fa fa-fw fa-building mr-2"></i>Vendor</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="pill" href="#pills-tasks"><i class="fa fa-fw fa-tasks mr-2"></i>Tasks</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="pill" href="#pills-project"><i class="fa fa-fw fa-project-diagram mr-2"></i>Project</a>
                             </li>
                         </ul>
 
@@ -130,6 +140,15 @@
                                 </div>
                             </div>
 
+                            <?php if ($config_module_enable_accounting) { ?>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name="billable" <?php if ($config_ticket_default_billable == 1) { echo "checked"; } ?> value="1" id="billableSwitch">
+                                    <label class="custom-control-label" for="billableSwitch">Mark Billable</label>
+                                </div>
+                            </div>
+                            <?php } ?>
+
                         </div>
 
                         <?php if (isset($_GET['client_id'])) { ?>
@@ -171,7 +190,7 @@
                                                 }
 
                                                 ?>
-                                                <option value="<?php echo $contact_id; ?>" <?php if ($contact_primary == 1) { echo "selected"; } ?>><?php echo "$contact_name$contact_title_display$contact_primary_display$contact_technical_display"; ?></option>
+                                                <option value="<?php echo $contact_id; ?>" <?php if ($contact_primary == 1 || $contact_id == isset($_GET['contact_id'])) { echo "selected"; } ?>><?php echo "$contact_name$contact_title_display$contact_primary_display$contact_technical_display"; ?></option>
 
                                             <?php } ?>
                                         </select>
@@ -185,7 +204,7 @@
                                             <span class="input-group-text"><i class="fa fa-fw fa-envelope"></i></span>
                                         </div>
                                         <select class="form-control select2" name="watchers[]" data-tags="true" data-placeholder="Enter or select email address" multiple>
-                                            <option value="">aa</option>
+                                            <option value=""></option>
                                             <?php
                                             $sql = mysqli_query($mysqli, "SELECT * FROM contacts WHERE contact_client_id = $client_id AND contact_archived_at IS NULL AND contact_email IS NOT NULL ORDER BY contact_email ASC");
                                             while ($row = mysqli_fetch_array($sql)) {
@@ -227,6 +246,32 @@
 
                             </div>
 
+                            <div class="tab-pane fade" id="pills-locations">
+
+                                <div class="form-group">
+                                    <label>Location</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fa fa-fw fa-map-marker-alt"></i></span>
+                                        </div>
+                                        <select class="form-control select2" name="location">
+                                            <option value="0">- None -</option>
+                                            <?php
+
+                                            $sql_locations = mysqli_query($mysqli, "SELECT * FROM locations WHERE location_client_id = $client_id AND location_archived_at IS NULL ORDER BY location_name ASC");
+                                            while ($row = mysqli_fetch_array($sql_locations)) {
+                                                $location_id_select = intval($row['location_id']);
+                                                $location_name_select = nullable_htmlentities($row['location_name']);
+                                            ?>
+                                                <option value="<?php echo $location_id_select; ?>"><?php echo $location_name_select; ?></option>
+
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+
                             <div class="tab-pane fade" id="pills-vendors">
 
                                 <div class="form-group">
@@ -257,6 +302,47 @@
                                             <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
                                         </div>
                                         <input type="text" class="form-control" name="vendor_ticket_number" placeholder="Vendor ticket number">
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="tab-pane fade" id="pills-tasks">
+
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fa fa-fw fa-tasks"></i></span>
+                                        </div>
+                                        <input type="text" class="form-control" name="tasks[]" placeholder="Enter Task Name">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-primary"><i class="fas fa-fw fa-check mr-2"></i>Add</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="tab-pane fade" id="pills-project">
+
+                                <div class="form-group">
+                                    <label>Project</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fa fa-fw fa-project-diagram"></i></span>
+                                        </div>
+                                        <select class="form-control select2" name="project">
+                                            <option value="0">- None -</option>
+                                            <?php
+
+                                            $sql_projects = mysqli_query($mysqli, "SELECT * FROM projects WHERE project_client_id = $client_id AND project_completed_at IS NULL AND project_archived_at IS NULL ORDER BY project_name ASC");
+                                            while ($row = mysqli_fetch_array($sql_projects)) {
+                                                $project_id_select = intval($row['project_id']);
+                                                $project_name_select = nullable_htmlentities($row['project_name']); ?>
+                                                <option value="<?php echo $project_id_select; ?>"><?php echo $project_name_select; ?></option>
+
+                                            <?php } ?>
+                                        </select>
                                     </div>
                                 </div>
 
