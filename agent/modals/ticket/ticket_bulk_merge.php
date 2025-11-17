@@ -10,7 +10,7 @@ ob_start();
 
 ?>
 <div class="modal-header bg-dark">
-    <h5 class="modal-title"><i class="fa fa-fw fa-clone mr-2"></i>Merge & close <strong><?= $count ?></strong>tickets</h5>
+    <h5 class="modal-title"><i class="fa fa-fw fa-clone mr-2"></i>Merge & close <strong><?= $count ?></strong> tickets</h5>
     <button type="button" class="close text-white" data-dismiss="modal">
         <span>&times;</span>
     </button>
@@ -75,3 +75,5 @@ ob_start();
 
 <!-- Ticket merge JS -->
 <script src="/agent/js/ticket_merge.js"></script>
+
+<?php require_once '../../../includes/modal_footer.php';
