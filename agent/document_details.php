@@ -106,15 +106,14 @@ $page_title = $row['document_name'];
             <div class="card-header bg-dark">
                 <div class="row">
                     <div class="col">
-                        <div class="h3 mb-0"><?= $document_name ?></div>
-                            <?php if ($document_description) { ?>
-                            <div class="text-light"><?= $document_description ?></div>
-                            <?php } ?>
-                        </h3>
+                        <div class="h4 mb-0"><?= $document_name ?></div>
+                        <?php if ($document_description) { ?>
+                        <div class="text-light"><?= $document_description ?></div>
+                        <?php } ?>
                     </div>
-                    <div class="col float-right">
+                    <div class="col">
                         <div class="float-right">
-                            <strong>Date:</strong> <?= date('Y-m-d', strtotime($document_created_at)); ?>
+                            <div class=""><strong>Date:</strong> <?= date('Y-m-d', strtotime($document_created_at)); ?></div>
                             <?php if($document_created_by_name) { ?>
                             <div><strong>Prepared By:</strong> <?= $document_created_by_name ?></div>
                             <?php } ?>
