@@ -49,6 +49,86 @@ if (isset($_POST['add_document'])) {
 
 }
 
+if (isset($_POST['add_document_from_template'])) {
+
+    enforceUserPermission('module_support', 2);
+
+    $client_id             = intval($_POST['client_id']);
+    $document_name         = sanitizeInput($_POST['name']);
+    $document_description  = sanitizeInput($_POST['description']);
+    $document_template_id  = intval($_POST['document_template_id']);
+    $folder                = intval($_POST['folder']);
+
+    // Get template
+    $sql_document = mysqli_query(
+        $mysqli,
+        "SELECT * FROM document_templates 
+         WHERE document_template_id = $document_template_id"
+    );
+
+    $row = mysqli_fetch_array($sql_document);
+
+    $document_template_name = sanitizeInput($row['document_template_name']);
+    $template_content_html  = $row['document_template_content']; // raw HTML from template
+
+    // 1) Create the new document with placeholder content to get an ID
+    mysqli_query(
+        $mysqli,
+        "INSERT INTO documents SET
+            document_name        = '$document_name',
+            document_description = '$document_description',
+            document_content     = '',
+            document_content_raw = '',
+            document_folder_id   = $folder,
+            document_created_by  = $session_user_id,
+            document_client_id   = $client_id"
+    );
+
+    $document_id = mysqli_insert_id($mysqli);
+
+    // 2) Copy template images to the document's folder
+    $templateFsPath = $_SERVER['DOCUMENT_ROOT'] . "/uploads/document_templates/" . $document_template_id;
+    $documentFsPath = $_SERVER['DOCUMENT_ROOT'] . "/uploads/documents/" . $document_id;
+
+    copyDirectory($templateFsPath, $documentFsPath);
+
+    // 3) Rewrite image paths in the HTML
+    //    /uploads/document_templates/{template_id}/ -> /uploads/documents/{document_id}/
+    $oldPath = "/uploads/document_templates/" . $document_template_id . "/";
+    $newPath = "/uploads/documents/" . $document_id . "/";
+
+    $processed_html = str_replace($oldPath, $newPath, $template_content_html);
+
+    // 4) Prepare content + content_raw
+    $content = mysqli_real_escape_string($mysqli, $processed_html);
+
+    $content_raw = sanitizeInput(
+        $document_name . " " . str_replace("<", " <", $processed_html)
+    );
+    $content_raw = mysqli_real_escape_string($mysqli, $content_raw);
+
+    // 5) Update the document with final content
+    mysqli_query(
+        $mysqli,
+        "UPDATE documents SET
+            document_content     = '$content',
+            document_content_raw = '$content_raw'
+         WHERE document_id = $document_id"
+    );
+
+    logAction(
+        "Document",
+        "Create",
+        "$session_name created document $document_name from template $document_template_name",
+        $client_id,
+        $document_id
+    );
+
+    flash_alert("Document <strong>$document_name</strong> created from template");
+
+    redirect("document_details.php?client_id=$client_id&document_id=$document_id");
+}
+
 if (isset($_POST['edit_document'])) {
 
     enforceUserPermission('module_support', 2);

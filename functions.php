@@ -63,6 +63,32 @@ function removeDirectory($path) {
     rmdir($path);
 }
 
+function copyDirectory($src, $dst) {
+    if (!is_dir($src)) {
+        return;
+    }
+
+    if (!is_dir($dst)) {
+        mkdir($dst, 0775, true);
+    }
+
+    $items = scandir($src);
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+
+        $srcPath = $src . '/' . $item;
+        $dstPath = $dst . '/' . $item;
+
+        if (is_dir($srcPath)) {
+            copyDirectory($srcPath, $dstPath);
+        } else {
+            copy($srcPath, $dstPath);
+        }
+    }
+}
+
 function getUserAgent() {
     return $_SERVER['HTTP_USER_AGENT'];
 }
