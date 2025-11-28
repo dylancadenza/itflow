@@ -17,7 +17,7 @@ if (isset($_GET['document_id'])) {
 
 $folder_location = 0;
 
-$sql_document = mysqli_query($mysqli, "SELECT * FROM documents 
+$sql_document = mysqli_query($mysqli, "SELECT * FROM documents
     LEFT JOIN folders ON document_folder_id = folder_id
     LEFT JOIN users ON document_created_by = user_id
     WHERE document_client_id = $client_id AND document_id = $document_id
@@ -51,10 +51,10 @@ $page_title = $row['document_name'];
 
 <ol class="breadcrumb d-print-none">
     <li class="breadcrumb-item">
-        <a href="client_overview.php?client_id=<?php echo $client_id; ?>"><?php echo $client_name; ?></a>
+        <a href="client_overview.php?client_id=<?= $client_id ?>"><?= $client_name ?></a>
     </li>
     <li class="breadcrumb-item">
-        <a href="documents.php?client_id=<?php echo $client_id; ?>">Documents</a>
+        <a href="files.php?client_id=<?= $client_id ?>">Files</a>
     </li>
     <?php
     // Build the full folder path
@@ -84,7 +84,7 @@ $page_title = $row['document_name'];
         $bread_crumb_folder_name = $folder['folder_name']; // Sanitized before put in array
         ?>
         <li class="breadcrumb-item">
-            <a href="documents.php?client_id=<?php echo $client_id; ?>&folder_id=<?php echo $bread_crumb_folder_id; ?>">
+            <a href="files.php?client_id=<?php echo $client_id; ?>&folder_id=<?php echo $bread_crumb_folder_id; ?>">
                 <i class="fas fa-fw fa-folder-open mr-2"></i><?php echo $bread_crumb_folder_name; ?>
             </a>
         </li>
@@ -92,9 +92,9 @@ $page_title = $row['document_name'];
     }
     ?>
     <li class="breadcrumb-item active">
-        <i class="fas fa-file"></i> <?php echo $document_name; ?> 
-        <?php if (!empty($document_archived_at)) { 
-            echo "<span class='text-danger ml-2'>(ARCHIVED on $document_archived_at)</span>"; 
+        <i class="fas fa-file"></i> <?php echo $document_name; ?>
+        <?php if (!empty($document_archived_at)) {
+            echo "<span class='text-danger ml-2'>(ARCHIVED on $document_archived_at)</span>";
         } ?>
     </li>
 </ol>
@@ -170,9 +170,9 @@ $page_title = $row['document_name'];
                             <td><?= $document_version_description_display ?></td>
                             <td><?= $document_version_author ?></td>
                         </tr>
-                        <?php 
+                        <?php
                         $document_version_count++; // Increment the counter
-                        } 
+                        }
                         ?>
                     </tbody>
                 </table>
@@ -208,7 +208,7 @@ $page_title = $row['document_name'];
             </h6>
             <?php
             $sql_files = mysqli_query($mysqli, "SELECT * FROM files, document_files
-                WHERE document_files.file_id = files.file_id 
+                WHERE document_files.file_id = files.file_id
                 AND document_files.document_id = $document_id
                 ORDER BY file_name ASC"
             );
@@ -240,7 +240,7 @@ $page_title = $row['document_name'];
             </h6>
             <?php
             $sql_contacts = mysqli_query($mysqli, "SELECT contacts.contact_id, contact_name FROM contacts, contact_documents
-                WHERE contacts.contact_id = contact_documents.contact_id 
+                WHERE contacts.contact_id = contact_documents.contact_id
                 AND contact_documents.document_id = $document_id
                 ORDER BY contact_name ASC"
             );
@@ -309,7 +309,7 @@ $page_title = $row['document_name'];
             </h6>
             <?php
             $sql_software = mysqli_query($mysqli, "SELECT software.software_id, software_name FROM software, software_documents
-                WHERE software.software_id = software_documents.software_id 
+                WHERE software.software_id = software_documents.software_id
                 AND software_documents.document_id = $document_id
                 ORDER BY software_name ASC"
             );
@@ -340,7 +340,7 @@ $page_title = $row['document_name'];
             </h6>
             <?php
             $sql_vendors = mysqli_query($mysqli, "SELECT vendors.vendor_id, vendor_name FROM vendors, vendor_documents
-                WHERE vendors.vendor_id = vendor_documents.vendor_id 
+                WHERE vendors.vendor_id = vendor_documents.vendor_id
                 AND vendor_documents.document_id = $document_id
                 ORDER BY vendor_name ASC"
             );
@@ -356,7 +356,7 @@ $page_title = $row['document_name'];
                 ?>
                 <div class="ml-2">
                     <a class="ajax-modal" href="#" data-modal-url="modals/vendor/vendor_details.php?id=<?= $vendor_id ?>">
-                        <?php echo $vendor_name; ?>        
+                        <?php echo $vendor_name; ?>
                     </a>
                     <a class="confirm-link float-right" href="post.php?unlink_vendor_from_document&vendor_id=<?php echo $vendor_id; ?>&document_id=<?php echo $document_id; ?>">
                         <i class="fas fa-fw fa-trash-alt text-secondary"></i>

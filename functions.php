@@ -1429,7 +1429,7 @@ function appNotify($type, $details, $action = null, $client_id = 0, $entity_id =
     $details = substr($details, 0, 1000);
     $action = substr($action, 0, 250);
 
-    $sql = mysqli_query($mysqli, "SELECT user_id FROM users 
+    $sql = mysqli_query($mysqli, "SELECT user_id FROM users
         WHERE user_type = 1 AND user_status = 1 AND user_archived_at IS NULL
     ");
 
@@ -1568,14 +1568,10 @@ function getFieldById($table, $id, $field, $escape_method = 'sql') {
 }
 
 // Recursive function to display folder options - Used in folders files and documents
-function display_folder_options($parent_folder_id, $client_id, $folder_location = 0, $indent = 0) {
+function display_folder_options($parent_folder_id, $client_id, $indent = 0) {
     global $mysqli;
 
-    $folder_location = intval($folder_location);
-    // 0 = Document Folders
-    // 1 = File Folders
-
-    $sql_folders = mysqli_query($mysqli, "SELECT * FROM folders WHERE parent_folder = $parent_folder_id AND folder_location = $folder_location AND folder_client_id = $client_id ORDER BY folder_name ASC");
+    $sql_folders = mysqli_query($mysqli, "SELECT * FROM folders WHERE parent_folder = $parent_folder_id AND folder_client_id = $client_id ORDER BY folder_name ASC");
     while ($row = mysqli_fetch_array($sql_folders)) {
         $folder_id = intval($row['folder_id']);
         $folder_name = nullable_htmlentities($row['folder_name']);
@@ -1593,7 +1589,7 @@ function display_folder_options($parent_folder_id, $client_id, $folder_location 
         echo "<option value=\"$folder_id\" $selected>$indentation$folder_name</option>";
 
         // Recursively display subfolders
-        display_folder_options($folder_id, $client_id, $folder_location, $indent + 1);
+        display_folder_options($folder_id, $client_id, $indent + 1);
     }
 }
 
