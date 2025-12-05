@@ -27,12 +27,14 @@
                         <p>Roles</p>
                     </a>
                 </li>
+                <!-- 2025-12-05 JQ - Hide Permission Modules currently just shows modules
                 <li class="nav-item">
                     <a href="/admin/modules.php" class="nav-link <?php if (basename($_SERVER["PHP_SELF"]) == "modules.php") {echo "active";} ?>">
                         <i class="nav-icon fas fa-puzzle-piece"></i>
                         <p>Modules</p>
                     </a>
                 </li>
+                -->
                 <li class="nav-item">
                     <a href="/admin/api_keys.php" class="nav-link <?php if (basename($_SERVER["PHP_SELF"]) == "api_keys.php") {echo "active";} ?>">
                         <i class="nav-icon fas fa-key"></i>
@@ -91,7 +93,7 @@
                             <p>AI Models</p>
                         </a>
                     </li>
-                
+
                 <?php if ($config_module_enable_ticketing) { ?>
                     <li class="nav-item">
                         <a href="/admin/ticket_status.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'ticket_status.php' ? 'active' : ''); ?>">
@@ -296,7 +298,7 @@
                 </li>
 
                 <?php
-                $sql_custom_links = mysqli_query($mysqli, "SELECT * FROM custom_links 
+                $sql_custom_links = mysqli_query($mysqli, "SELECT * FROM custom_links
                     WHERE custom_link_location = 4 AND custom_link_archived_at IS NULL
                     ORDER BY custom_link_order ASC, custom_link_name ASC"
                 );
