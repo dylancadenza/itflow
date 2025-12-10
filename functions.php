@@ -1808,7 +1808,6 @@ function dbExecute(mysqli $mysqli, string $sql, array $params = []): mysqli_stmt
         $values = [];
 
         foreach ($params as $param) {
-            // Detect type
             if (is_int($param)) {
                 $types .= 'i';
             } elseif (is_float($param)) {
@@ -1817,17 +1816,14 @@ function dbExecute(mysqli $mysqli, string $sql, array $params = []): mysqli_stmt
                 $types .= 'i';
                 $param  = $param ? 1 : 0;
             } elseif (is_null($param)) {
-                // bind as string, MySQL will accept NULL when using proper SQL (e.g. "col = ?")
                 $types .= 's';
                 $param  = null;
             } else {
                 $types .= 's';
             }
-
             $values[] = $param;
         }
 
-        // bind_param needs references; unpack will pass them correctly
         if (!$stmt->bind_param($types, ...$values)) {
             throw new Exception('MySQLi bind_param error: ' . $stmt->error . ' | SQL: ' . $sql);
         }
@@ -1847,11 +1843,9 @@ function dbFetchAll(mysqli $mysqli, string $sql, array $params = []): array
 {
     $stmt   = dbExecute($mysqli, $sql, $params);
     $result = $stmt->get_result();
-
     if ($result === false) {
         return [];
     }
-
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
@@ -1862,13 +1856,10 @@ function dbFetchOne(mysqli $mysqli, string $sql, array $params = []): ?array
 {
     $stmt   = dbExecute($mysqli, $sql, $params);
     $result = $stmt->get_result();
-
     if ($result === false) {
         return null;
     }
-
     $row = $result->fetch_assoc();
-
     return $row !== null ? $row : null;
 }
 
@@ -1881,14 +1872,13 @@ function dbFetchValue(mysqli $mysqli, string $sql, array $params = [])
     if ($row === null) {
         return null;
     }
-
     return reset($row);
 }
 
 /**
  * INSERT using "SET" style.
  * Example:
- *   $id = dbInsertSet($mysqli, 'clients', [
+ *   $id = dbInsert($mysqli, 'clients', [
  *       'client_name' => $name,
  *       'client_type' => $type,
  *   ]);
@@ -1898,13 +1888,12 @@ function dbFetchValue(mysqli $mysqli, string $sql, array $params = [])
  * @throws InvalidArgumentException
  * @throws Exception
  */
-function dbInsertSet(mysqli $mysqli, string $table, array $data): int
+function dbInsert(mysqli $mysqli, string $table, array $data): int
 {
     if (empty($data)) {
-        throw new InvalidArgumentException('dbInsertSet called with empty $data');
+        throw new InvalidArgumentException('dbInsert called with empty $data');
     }
 
-    // NOTE: $table and keys must NOT come from untrusted user input
     $setParts = [];
     foreach ($data as $column => $_) {
         $setParts[] = "$column = ?";
@@ -1918,72 +1907,80 @@ function dbInsertSet(mysqli $mysqli, string $table, array $data): int
     return $mysqli->insert_id;
 }
 
-/**
- * UPDATE using "SET" style and a WHERE clause with placeholders.
- *
- * Example:
- *   dbUpdateSet(
- *       $mysqli,
- *       'clients',
- *       ['client_name' => $name, 'client_type' => $type],
- *       'client_id = ?',
- *       [$client_id]
- *   );
- *
- * @return int affected_rows
- *
- * @throws InvalidArgumentException
- * @throws Exception
- */
-function dbUpdateSet(
+function dbUpdate(
     mysqli $mysqli,
     string $table,
     array $data,
-    string $whereSql,
+    $where,
     array $whereParams = []
 ): int {
     if (empty($data)) {
-        throw new InvalidArgumentException('dbUpdateSet called with empty $data');
+        throw new InvalidArgumentException('dbUpdate called with empty $data');
+    }
+    if (empty($where)) {
+        throw new InvalidArgumentException('dbUpdate requires a WHERE clause');
     }
 
-    if (trim($whereSql) === '') {
-        throw new InvalidArgumentException('dbUpdateSet requires a WHERE clause');
-    }
-
-    // Again, $table and keys must not come from user input
     $setParts = [];
     foreach ($data as $column => $_) {
         $setParts[] = "$column = ?";
+    }
+
+    if (is_array($where)) {
+        $whereParts  = [];
+        $whereParams = [];
+        foreach ($where as $column => $value) {
+            $whereParts[]  = "$column = ?";
+            $whereParams[] = $value;
+        }
+        $whereSql = implode(' AND ', $whereParts);
+    } else {
+        $whereSql = $where;
     }
 
     $sql    = "UPDATE $table SET " . implode(', ', $setParts) . " WHERE $whereSql";
     $params = array_merge(array_values($data), $whereParams);
 
     $stmt = dbExecute($mysqli, $sql, $params);
-
     return $stmt->affected_rows;
 }
 
 /**
  * DELETE helper.
  *
- * Example:
- *   dbDelete($mysqli, 'client_tags', 'client_id = ?', [$client_id]);
+ * WHERE can be:
+ *   - array: ['client_id' => $id] (auto "client_id = ?")
+ *   - string: 'client_id = ?' (use with $whereParams)
  *
  * @return int affected_rows
  *
  * @throws InvalidArgumentException
  * @throws Exception
  */
-function dbDelete(mysqli $mysqli, string $table, string $whereSql, array $whereParams = []): int
-{
-    if (trim($whereSql) === '') {
+function dbDelete(
+    mysqli $mysqli,
+    string $table,
+    $where,
+    array $whereParams = []
+): int {
+    if (empty($where)) {
         throw new InvalidArgumentException('dbDelete requires a WHERE clause');
+    }
+
+    if (is_array($where)) {
+        $whereParts  = [];
+        $whereParams = [];
+        foreach ($where as $column => $value) {
+            $whereParts[]  = "$column = ?";
+            $whereParams[] = $value;
+        }
+        $whereSql = implode(' AND ', $whereParts);
+    } else {
+        $whereSql = $where;
     }
 
     $sql  = "DELETE FROM $table WHERE $whereSql";
     $stmt = dbExecute($mysqli, $sql, $whereParams);
-
     return $stmt->affected_rows;
 }
 
