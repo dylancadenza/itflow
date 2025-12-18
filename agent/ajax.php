@@ -49,7 +49,7 @@ if (isset($_GET['merge_ticket_get_json_details'])) {
     $merge_into_ticket_number = intval(preg_replace('/[^0-9]/', '', $_GET['merge_into_ticket_number']));
 
     $sql = mysqli_query($mysqli, "SELECT ticket_id, ticket_number, ticket_prefix, ticket_subject, ticket_priority, ticket_status, ticket_status_name, client_name, contact_name FROM tickets
-        LEFT JOIN clients ON ticket_client_id = client_id 
+        LEFT JOIN clients ON ticket_client_id = client_id
         LEFT JOIN contacts ON ticket_contact_id = contact_id
         LEFT JOIN ticket_statuses ON ticket_status = ticket_status_id
         WHERE ticket_number = $merge_into_ticket_number");
@@ -86,7 +86,7 @@ if (isset($_POST['contact_set_notes'])) {
     $notes = sanitizeInput($_POST['notes']);
 
     // Get Contact Details and Client ID for Logging
-    $sql = mysqli_query($mysqli,"SELECT contact_name, contact_client_id 
+    $sql = mysqli_query($mysqli,"SELECT contact_name, contact_client_id
         FROM contacts WHERE contact_id = $contact_id"
     );
     $row = mysqli_fetch_array($sql);
@@ -108,7 +108,7 @@ if (isset($_POST['asset_set_notes'])) {
     $notes = sanitizeInput($_POST['notes']);
 
     // Get Asset Details and Client ID for Logging
-    $sql = mysqli_query($mysqli,"SELECT asset_name, asset_client_id 
+    $sql = mysqli_query($mysqli,"SELECT asset_name, asset_client_id
         FROM assets WHERE asset_id = $asset_id"
     );
     $row = mysqli_fetch_array($sql);
@@ -195,7 +195,7 @@ if (isset($_GET['share_generate_link'])) {
         $item_expires_friendly = "1 month";
     }
 
-    $item_key = randomString(156);
+    $item_key = randomString(32);
 
     if ($item_type == "Document") {
         $row = mysqli_fetch_array(mysqli_query($mysqli, "SELECT document_name FROM documents WHERE document_id = $item_id AND document_client_id = $client_id LIMIT 1"));
@@ -496,8 +496,8 @@ if (isset($_POST['update_kanban_ticket'])) {
                 if (!empty($config_smtp_host) && $config_ticket_client_general_notifications == 1) {
 
                     // Get details
-                    $ticket_sql = mysqli_query($mysqli, "SELECT contact_name, contact_email, ticket_prefix, ticket_number, ticket_subject, ticket_status_name, ticket_assigned_to, ticket_url_key, ticket_client_id FROM tickets 
-                        LEFT JOIN clients ON ticket_client_id = client_id 
+                    $ticket_sql = mysqli_query($mysqli, "SELECT contact_name, contact_email, ticket_prefix, ticket_number, ticket_subject, ticket_status_name, ticket_assigned_to, ticket_url_key, ticket_client_id FROM tickets
+                        LEFT JOIN clients ON ticket_client_id = client_id
                         LEFT JOIN contacts ON ticket_contact_id = contact_id
                         LEFT JOIN ticket_statuses ON ticket_status = ticket_status_id
                         WHERE ticket_id = $ticket_id
@@ -905,7 +905,7 @@ if (isset($_GET['ai_ticket_summary'])) {
     }
 
     $prompt = "
-    Summarize the following IT support ticket and its responses in a concise, clear, and professional manner. 
+    Summarize the following IT support ticket and its responses in a concise, clear, and professional manner.
     The summary should include:
 
     1. Main Issue: What was the problem reported by the user?

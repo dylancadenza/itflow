@@ -68,7 +68,7 @@ if (isset($_POST['add_ticket'])) {
     $config_base_url = sanitizeInput($config_base_url);
 
     //Generate a unique URL key for clients to access
-    $url_key = randomString(156);
+    $url_key = randomString(32);
 
     mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_source = 'Agent', ticket_category = $category_id, ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_billable = '$billable', ticket_status = '$ticket_status', ticket_vendor_ticket_number = '$vendor_ticket_number', ticket_vendor_id = $vendor_id, ticket_location_id = $location_id, ticket_asset_id = $asset_id, ticket_created_by = $session_user_id, ticket_assigned_to = $assigned_to, ticket_contact_id = $contact, ticket_url_key = '$url_key', ticket_due_at = $due, ticket_client_id = $client_id, ticket_invoice_id = 0, ticket_project_id = $project_id");
 
@@ -1521,7 +1521,7 @@ if (isset($_POST['bulk_add_asset_ticket'])) {
             $config_base_url = sanitizeInput($config_base_url);
 
             //Generate a unique URL key for clients to access
-            $url_key = randomString(156);
+            $url_key = randomString(32);
 
             mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_category = $category_id, ticket_subject = '$subject_asset_prepended', ticket_details = '$details', ticket_priority = '$priority', ticket_billable = $billable, ticket_status = $ticket_status, ticket_asset_id = $asset_id, ticket_created_by = $session_user_id, ticket_assigned_to = $assigned_to, ticket_url_key = '$url_key', ticket_client_id = $client_id, ticket_project_id = $project_id");
 
@@ -2167,7 +2167,7 @@ if (isset($_POST['add_invoice_from_ticket'])) {
         $invoice_number = mysqli_insert_id($mysqli);
 
         //Generate a unique URL key for clients to access
-        $url_key = randomString(156);
+        $url_key = randomString(32);
 
         mysqli_query($mysqli, "INSERT INTO invoices SET invoice_prefix = '$config_invoice_prefix', invoice_number = $invoice_number, invoice_scope = '$scope', invoice_date = '$date', invoice_due = DATE_ADD('$date', INTERVAL $client_net_terms day), invoice_currency_code = '$session_company_currency', invoice_category_id = $category, invoice_status = 'Draft', invoice_url_key = '$url_key', invoice_client_id = $client_id");
         $invoice_id = mysqli_insert_id($mysqli);

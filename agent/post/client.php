@@ -794,7 +794,7 @@ if (isset($_POST['bulk_add_client_ticket'])) {
             $config_base_url = sanitizeInput($config_base_url);
 
             //Generate a unique URL key for clients to access
-            $url_key = randomString(156);
+            $url_key = randomString(32);
 
             mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_category = $category_id, ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_billable = $billable, ticket_status = $ticket_status, ticket_created_by = $session_user_id, ticket_assigned_to = $assigned_to, ticket_url_key = '$url_key', ticket_client_id = $client_id, ticket_project_id = $project_id");
 

@@ -346,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
                     // Session info
                     $_SESSION['user_id']    = $user_id;
-                    $_SESSION['csrf_token'] = randomString(156);
+                    $_SESSION['csrf_token'] = randomString(32);
                     $_SESSION['logged']     = true;
 
                     // Forcing MFA

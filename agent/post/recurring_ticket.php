@@ -90,7 +90,7 @@ if (isset($_POST['bulk_force_recurring_tickets'])) {
                 $client_id = intval($row['recurring_ticket_client_id']);
                 $asset_id = intval($row['recurring_ticket_asset_id']);
                 $category = intval($row['recurring_ticket_category']);
-                $url_key = randomString(156);
+                $url_key = randomString(32);
 
                 $ticket_status = 1; // Default
                 if ($assigned_id > 0) {
@@ -228,7 +228,7 @@ if (isset($_GET['force_recurring_ticket'])) {
         $client_id = intval($row['recurring_ticket_client_id']);
         $asset_id = intval($row['recurring_ticket_asset_id']);
         $category = intval($row['recurring_ticket_category']);
-        $url_key = randomString(156);
+        $url_key = randomString(32);
 
         $ticket_status = 1; // Default
         if ($assigned_id > 0) {

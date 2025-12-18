@@ -25,7 +25,7 @@ if (isset($_POST['add_ticket'])) {
     $config_ticket_new_ticket_notification_email = filter_var($config_ticket_new_ticket_notification_email, FILTER_VALIDATE_EMAIL);
 
     //Generate a unique URL key for clients to access
-    $url_key = randomString(156);
+    $url_key = randomString(32);
 
     // Ensure priority is low/med/high (as can be user defined)
     if ($_POST['priority'] !== "Low" && $_POST['priority'] !== "Medium" && $_POST['priority'] !== "High") {

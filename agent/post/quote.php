@@ -26,7 +26,7 @@ if (isset($_POST['add_quote'])) {
     $quote_number = mysqli_insert_id($mysqli);
 
     //Generate a unique URL key for clients to access
-    $quote_url_key = randomString(156);
+    $quote_url_key = randomString(32);
 
     mysqli_query($mysqli,"INSERT INTO quotes SET quote_prefix = '$config_quote_prefix', quote_number = $quote_number, quote_scope = '$scope', quote_date = '$date', quote_expire = '$expire', quote_currency_code = '$session_company_currency', quote_category_id = $category, quote_status = 'Draft', quote_url_key = '$quote_url_key', quote_client_id = $client_id");
 
@@ -78,7 +78,7 @@ if (isset($_POST['add_quote_copy'])) {
     $category_id = intval($row['quote_category_id']);
 
     //Generate a unique URL key for clients to access
-    $quote_url_key = randomString(156);
+    $quote_url_key = randomString(32);
 
     mysqli_query($mysqli,"INSERT INTO quotes SET quote_prefix = '$config_quote_prefix', quote_number = $quote_number, quote_scope = '$quote_scope', quote_date = '$date', quote_expire = '$expire', quote_category_id = $category_id, quote_status = 'Draft', quote_discount_amount = $quote_discount_amount, quote_amount = $quote_amount, quote_currency_code = '$quote_currency_code', quote_note = '$quote_note', quote_url_key = '$quote_url_key', quote_client_id = $client_id");
 
@@ -147,7 +147,7 @@ if (isset($_POST['add_quote_to_invoice'])) {
     $invoice_number = mysqli_insert_id($mysqli);
 
     //Generate a unique URL key for clients to access
-    $url_key = randomString(156);
+    $url_key = randomString(32);
 
     mysqli_query($mysqli,"INSERT INTO invoices SET invoice_prefix = '$config_invoice_prefix', invoice_number = $invoice_number, invoice_scope = '$quote_scope', invoice_date = '$date', invoice_due = DATE_ADD(CURDATE(), INTERVAL $client_net_terms day), invoice_category_id = $category_id, invoice_status = 'Draft', invoice_discount_amount = $quote_discount_amount, invoice_amount = $quote_amount, invoice_currency_code = '$quote_currency_code', invoice_note = '$quote_note', invoice_url_key = '$url_key', invoice_client_id = $client_id");
 
