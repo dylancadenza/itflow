@@ -2,8 +2,8 @@
 
 require_once '../../../includes/modal_header.php';
 
-$key = randomString(156);
-$decryptPW = randomString(160);
+$key = randomString(32);
+$decryptPW = randomString(32);
 
 ob_start();
 ?>
