@@ -222,7 +222,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                 </form>
                             <?php } else { ?>
                                 No Cards on File
-                            <?php } ?>  
+                            <?php } ?>
                         </td>
                         <td>
                             <span class="p-2 badge badge-<?php echo $status_badge_color; ?>">

@@ -65,7 +65,7 @@ $sql = mysqli_query(
     $billable_query
     $client_query
     ORDER BY
-        CASE 
+        CASE
             WHEN '$sort' = 'recurring_ticket_priority' THEN
                 CASE recurring_ticket_priority
                     WHEN 'High' THEN 1
@@ -74,7 +74,7 @@ $sql = mysqli_query(
                     ELSE 4  -- Optional: for unexpected priority values
                 END
             ELSE NULL
-        END $order, 
+        END $order,
         $sort $order  -- Apply normal sorting by $sort and $order
     LIMIT $record_from, $record_to"
 );
@@ -152,7 +152,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <div class="col-sm-2">
                     <div class="form-group">
                         <select class="form-control select2" name="billable" onchange="this.form.submit()">
-                            <option value="">- Billable Status -</option>                    
+                            <option value="">- Billable Status -</option>
                             <option <?php if ($billable_filter == 1) { echo "selected"; } ?> value="1">Billable</option>
                             <option <?php if ($billable_filter == 0) { echo "selected"; } ?> value="0">Non-Billable</option>
                         </select>
@@ -170,31 +170,31 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     <i class="fas fa-fw fa-paper-plane mr-2"></i>Force Reoccur
                                 </button>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item ajax-modal" href="#" 
+                                <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/recurring_ticket/recurring_ticket_bulk_agent_edit.php"
                                     data-bulk="true">
                                     <i class="fas fa-fw fa-user-check mr-2"></i>Assign Agent
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item ajax-modal" href="#" 
+                                <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/recurring_ticket/recurring_ticket_bulk_category_edit.php"
                                     data-bulk="true">
                                     <i class="fas fa-fw fa-layer-group mr-2"></i>Set Category
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item ajax-modal" href="#" 
+                                <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/recurring_ticket/recurring_ticket_bulk_priority_edit.php"
                                     data-bulk="true">
                                     <i class="fas fa-fw fa-thermometer-half mr-2"></i>Set Priority
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item ajax-modal" href="#" 
+                                <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/recurring_ticket/recurring_ticket_bulk_billable_edit.php"
                                     data-bulk="true">
                                     <i class="fas fa-fw fa-dollar-sign mr-2"></i>Set Billable
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item ajax-modal" href="#" 
+                                <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/recurring_ticket/recurring_ticket_bulk_next_run_edit.php"
                                     data-bulk="true">
                                     <i class="fas fa-fw fa-calendar-day mr-2"></i>Set Next Run Date
@@ -260,7 +260,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     Agent <?php if ($sort == 'user_name') { echo $order_icon; } ?>
                                 </a>
                             </th>
-                            
+
                             <?php if (!$client_url) { ?>
                             <th>
                                 <a class="text-secondary" href="?<?php echo $url_query_strings_sort; ?>&sort=client_name&order=<?php echo $disp; ?>">

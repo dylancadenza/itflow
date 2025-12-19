@@ -7,7 +7,7 @@
                     <table class="table table-striped table-borderless table-hover">
                         <thead class="text-dark <?php if (!$num_rows[0]) { echo "d-none"; } ?> text-nowrap">
                         <tr>
-                            
+
                             <td>
                                 <?php if ($status !== 'Closed') { ?>
                                 <div class="form-check">
@@ -26,7 +26,7 @@
                                     Subject <?php if ($sort == 'ticket_subject') { echo $order_icon; } ?>
                                 </a>
                             </th>
-                            
+
                             <th>
                                 <?php if (!$client_url) { ?>
                                 <a class="text-dark" href="?<?php echo $url_query_strings_sort; ?>&sort=client_name&order=<?php echo $disp; ?>">
@@ -39,8 +39,8 @@
                             </th>
                             <?php if ($config_module_enable_accounting && lookupUserPermission("module_sales") >= 2) { ?>
                             <th class="text-center">
-                                <a class="text-dark" href="?<?php echo $url_query_strings_sort; ?>&sort=ticket_billable&order=<?php echo $disp; ?>">
-                                    Billable <?php if ($sort == 'ticket_billable') { echo $order_icon; } ?>
+                                <a class="text-secondary" href="?<?= $url_query_strings_sort ?>&sort=ticket_billable&order=<?= $disp ?>">
+                                    Billable <?php if ($sort == 'recurring_ticket_billable') { echo $order_icon; } ?>
                                 </a>
                             </th>
                             <?php } ?>
@@ -186,7 +186,7 @@
                             if($task_count) {
                                 $tasks_completed_percent = round(($completed_task_count / $task_count) * 100);
                             }
-                            
+
                             ?>
 
                             <tr class="<?php if(empty($ticket_closed_at) && empty($ticket_updated_at)) { echo "text-bold"; }?> <?php if (empty($ticket_closed_at) && $ticket_reply_type == "Client") { echo "table-warning"; } ?>">
@@ -199,7 +199,7 @@
                                     </div>
                                     <?php } ?>
                                 </td>
-                                
+
                                 <!-- Ticket Number -->
                                 <td>
                                     <a href="ticket.php?ticket_id=<?= "$ticket_id$has_client" ?>">
@@ -242,9 +242,9 @@
                                             data-modal-url="modals/ticket/ticket_billable.php?id=<?= $ticket_id ?>">
                                             <?php
                                             if ($ticket_billable == 1) {
-                                                echo "<span class='badge badge-pill badge-success p-2'>Yes</span>";
+                                                echo "<span class='badge badge-pill badge-success p-2'><i class='fas fa-fw fa-check'></i></span>";
                                             } else {
-                                                echo "<span class='badge badge-pill badge-secondary p-2'>No</span>";
+                                                echo "<span class='badge badge-pill badge-secondary p-2'><i class='fas fa-fw fa-minus'></i></span>";
                                             }
                                             ?>
                                         </a>
@@ -303,7 +303,7 @@
 
                             <?php
                         }
-                        
+
                         ?>
 
                         </tbody>
