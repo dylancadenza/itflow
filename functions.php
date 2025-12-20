@@ -1436,6 +1436,10 @@ function appNotify($type, $details, $action = null, $client_id = 0, $entity_id =
 function logAction($type, $action, $description, $client_id = 0, $entity_id = 0) {
     global $mysqli, $session_user_agent, $session_ip, $session_user_id;
 
+    $client_id = intval($client_id);
+    $entity_id = intval($entity_id);
+    $session_user_id = intval($session_user_id);
+
     if (empty($session_user_id)) {
         $session_user_id = 0;
     }

@@ -281,12 +281,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             'created'        => time()
                         ];
                     }
-
-                    $response = "
-                        <div class='alert alert-light'>
-                            This login can be used as either an Agent account or a Client Portal account.
-                            Please choose how you want to continue.
-                        </div>";
                 }
 
             } else {
