@@ -16,7 +16,7 @@
     <br />
     <a href="https://demo.itflow.org"><strong>View demo</strong></a>
     <br />
-    Username: <b>demo@demo</b> | Password: <b>demo</b>
+    Username: <b>demo@demo.com</b> | Password: <b>demo</b>
     <br />
     <br />
     <a href="https://itflow.org/#about">About</a>
