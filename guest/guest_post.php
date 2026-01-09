@@ -225,6 +225,39 @@ if (isset($_GET['add_ticket_feedback'], $_GET['url_key'])) {
 
 }
 
+if (isset($_GET['approve_ticket_task'])) {
+
+    $task_id = intval($_GET['approve_ticket_task']);
+    $approval_id = intval($_GET['approval_id']);
+    $url_key = sanitizeInput($_GET['approval_url_key']);
+
+    $approval_row = mysqli_fetch_array(mysqli_query($mysqli, "SELECT * FROM task_approvals LEFT JOIN tasks on task_id = approval_task_id WHERE approval_id = $approval_id AND approval_task_id = $task_id AND approval_url_key = '$url_key' AND approval_status = 'pending'"));
+
+    $task_name = nullable_htmlentities($approval_row['task_name']);
+    $scope = nullable_htmlentities($approval_row['approval_scope']);
+    $type = nullable_htmlentities($approval_row['approval_type']);
+    $required_user = intval($approval_row['approval_required_user_id']);
+    $created_by = intval($approval_row['approval_created_by']);
+    $ticket_id = intval($approval_row['task_ticket_id']);
+
+    if (!$approval_row) {
+        exit("Cannot find/approve that task");
+    }
+
+    // Approve
+    mysqli_query($mysqli, "UPDATE task_approvals SET approval_status = 'approved', approval_approved_by = $required_user WHERE approval_id = $approval_id AND approval_task_id = $task_id AND approval_url_key = '$url_key' AND approval_status = 'pending'");
+
+    // Notify tech
+    mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket', notification = 'Guest approved ticket task $task_name', notification_action = 'ticket.php?ticket_id=$ticket_id', notification_user_id = $created_by");
+
+    // Logging
+    logAction("Task", "Edit", "Guest user approved task $task_name via link (approval $approval_id)", 0, $task_id);
+
+    flash_alert("Task Approved");
+    redirect();
+
+}
+
 if (isset($_GET['export_quote_pdf'])) {
 
     $quote_id = intval($_GET['export_quote_pdf']);

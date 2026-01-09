@@ -70,6 +70,13 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
         );
         $completed_task_count = mysqli_num_rows($sql_tasks_completed);
 
+        // Get pending task approvals
+        $sql_task_approvals = mysqli_query($mysqli,"
+            SELECT task_id, task_name, approval_id, approval_scope, approval_type, approval_required_user_id, approval_status, approval_url_key
+            FROM tasks
+            LEFT JOIN task_approvals ON task_id = task_approvals.approval_task_id
+            WHERE task_ticket_id = $ticket_id AND task_completed_at IS NULL AND approval_scope = 'client' AND approval_status = 'pending' 
+        ");
         ?>
 
         <ol class="breadcrumb d-print-none">
@@ -129,6 +136,59 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                 ?>
             </div>
         </div>
+
+        <!-- Approvals -->
+        <?php if (mysqli_num_rows($sql_task_approvals) > 0) { ?>
+            <div class="card">
+                <div class="card-body">
+                    <h5>Approvals</h5>
+                    This ticket has tasks requiring approval:
+
+                    <ul>
+                        <?php
+
+                        while ($approvals = mysqli_fetch_array($sql_task_approvals)) {
+                            $task_id = intval($approvals['task_id']);
+                            $approval_id = intval($approvals['approval_id']);
+                            $task_name = nullable_htmlentities($approvals['task_name']);
+                            $approval_type = nullable_htmlentities($approvals['approval_type']);
+                            $approval_url_key = nullable_htmlentities($approvals['approval_url_key']);
+
+                            $contact_can_approve = false; // Default
+
+                            if ($approval_type == 'any') {
+                                $contact_can_approve = true;
+                            }
+
+                            if ($session_contact_primary) {
+                                $contact_can_approve = true;
+                            }
+
+                            if ($approval_type == 'technical' && $session_contact_is_technical_contact) {
+                                $contact_can_approve = true;
+                            }
+
+                            if ($approval_type == 'billing' && $session_contact_is_billing_contact) {
+                                $contact_can_approve = true;
+                            }
+
+                            ?>
+
+                            <li>
+                                <?php echo $task_name;
+                                if ($contact_can_approve) { ?> - <a href="post.php?approve_ticket_task=<?= $task_id ?>&approval_id=<?= $approval_id ?>&approval_url_key=<?= $approval_url_key ?>" class="confirm-link">Approve task</a> <?php }
+                                else {?> - Please ask your <?= $approval_type ?> contact to approve this task <?php } ?>
+                            </li>
+
+                        <?php } ?>
+
+                    </ul>
+
+
+
+                </div>
+            </div>
+        <?php } ?>
 
         <hr>
 

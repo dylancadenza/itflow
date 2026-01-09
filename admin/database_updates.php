@@ -4134,10 +4134,30 @@ if (LATEST_DATABASE_VERSION > CURRENT_DATABASE_VERSION) {
         mysqli_query($mysqli, "UPDATE `settings` SET `config_current_database_version` = '2.3.8'");
     }
 
-    // if (CURRENT_DATABASE_VERSION == '2.3.8') {
-    //     // Insert queries here required to update to DB version 2.3.9
+     if (CURRENT_DATABASE_VERSION == '2.3.8') {
+
+         mysqli_query($mysqli, "
+            CREATE TABLE `task_approvals` (
+              `approval_id` int(11) NOT NULL AUTO_INCREMENT,
+              `approval_scope` enum('client','internal') NOT NULL,
+              `approval_type` enum('any','technical','billing','specific') NOT NULL,
+              `approval_required_user_id` int(11) DEFAULT NULL,
+              `approval_status` enum('pending','approved','declined') NOT NULL,
+              `approval_created_by` int(11) NOT NULL,
+              `approval_approved_by` varchar(255) DEFAULT NULL,
+              `approval_url_key` varchar(200) NOT NULL,
+              `approval_task_id` int(11) NOT NULL,
+              PRIMARY KEY (`approval_id`)                                          
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+         mysqli_query($mysqli, "UPDATE `settings` SET `config_current_database_version` = '2.3.9'");
+     }
+
+    // if (CURRENT_DATABASE_VERSION == '2.3.9') {
+    //     // Insert queries here required to update to DB version 2.4.0
     //     // Then, update the database to the next sequential version
-    //     mysqli_query($mysqli, "UPDATE `settings` SET `config_current_database_version` = '2.3.9'");
+    //     mysqli_query($mysqli, "UPDATE `settings` SET `config_current_database_version` = '2.4.0'");
     // }
 
 } else {
