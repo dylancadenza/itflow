@@ -34,7 +34,7 @@ if (isset($_POST['edit_role'])) {
     $name = sanitizeInput($_POST['role_name']);
     $description = sanitizeInput($_POST['role_description']);
     $admin = intval($_POST['role_is_admin']);
-    
+
     mysqli_query($mysqli, "UPDATE user_roles SET role_name = '$name', role_description = '$description', role_is_admin = $admin WHERE role_id = $role_id");
 
     // Update role access levels
@@ -70,18 +70,18 @@ if (isset($_GET['archive_role'])) {
     $role_user_count = mysqli_fetch_row($sql_role_user_count)[0];
     if ($role_user_count != 0) {
         flash_alert("Role must not in use to archive it", 'error');
-        
+
         redirect();
     }
 
     mysqli_query($mysqli, "UPDATE user_roles SET role_archived_at = NOW() WHERE role_id = $role_id");
 
-    $role_name = sanitizeInput(getFieldById('roles', $role_id, 'role_name'));
+    $role_name = sanitizeInput(getFieldById('user_roles', $role_id, 'role_name'));
 
     logAction("User Role", "Archive", "$session_name archived user role $role_name", 0, $role_id);
 
     flash_alert("User Role <strong>$role_name</strong> archived", 'error');
-    
+
     redirect();
 
 }
