@@ -235,8 +235,9 @@ $sql_categories_filter = mysqli_query(
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item" href="<?=htmlspecialchars('?' . http_build_query(array_merge($_GET, ['view' => 'list']))); ?>">List</a>
                                     <?php if ($status !== 'Closed') {?>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item " href="<?=htmlspecialchars('?' . http_build_query(array_merge($_GET, ['view' => 'kanban']))); ?>">Kanban</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item " href="<?=htmlspecialchars('?' . http_build_query(array_merge($_GET, ['view' => 'kanban']))); ?>">Kanban</a>
+                                        <a class="dropdown-item " href="<?=htmlspecialchars('?' . http_build_query(array_merge($_GET, ['view' => 'kanbanv2']))); ?>">Kanban (v2)</a>
                                     <?php } ?>
                                 </div>
                             </div>
@@ -391,6 +392,8 @@ if (isset($_GET["view"])) {
         require_once "ticket_list.php";
     } elseif ($_GET["view"] == "kanban") {
         require_once "ticket_kanban.php";
+    } elseif ($_GET["view"] == "kanbanv2") {
+        require_once "ticket_kanban_v2.php";
     }
 } else {
     // here we have to get default view setting
