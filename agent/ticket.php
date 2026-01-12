@@ -961,23 +961,82 @@ if (isset($_GET['ticket_id'])) {
 
                             <table class="table table-sm" id="tasks">
                                 <?php
-                                while($row = mysqli_fetch_array($sql_tasks)){
+                                while ($row = mysqli_fetch_array($sql_tasks)) {
                                     $task_id = intval($row['task_id']);
                                     $task_name = nullable_htmlentities($row['task_name']);
                                     //$task_description = nullable_htmlentities($row['task_description']); // not in db yet
                                     $task_completion_estimate = intval($row['task_completion_estimate']);
                                     $task_completed_at = nullable_htmlentities($row['task_completed_at']);
+
+                                    // Check for approvals
+                                    $task_needs_approval = false;
+                                    $task_needs_approval = mysqli_num_rows(mysqli_query(
+                                            $mysqli,
+                                            "SELECT 1 FROM task_approvals
+                                                 WHERE approval_task_id = $task_id
+                                                   AND approval_status IN ('pending','declined')
+                                                 LIMIT 1"
+                                        )) > 0;
+
+                                    $approval_id = 0;
+                                    $user_can_approve = false;
+                                    $approval_rows = mysqli_query($mysqli, "
+                                        SELECT approval_id, approval_scope, approval_type, approval_required_user_id, approval_created_by
+                                        FROM task_approvals WHERE approval_task_id = $task_id AND approval_status = 'pending'
+                                    ");
+
+                                    while ($approval = mysqli_fetch_array($approval_rows)) {
+
+                                        $scope = nullable_htmlentities($approval['approval_scope']);
+                                        $type = nullable_htmlentities($approval['approval_type']);
+                                        $required_user = intval($approval['approval_required_user_id']);
+                                        $created_by = intval($approval['approval_created_by']);
+
+                                        // Named, specific user?
+                                        if ($scope == 'internal' && $type == 'specific' && $required_user == $session_user_id) {
+                                            $user_can_approve = true;
+                                            $approval_id = intval($approval['approval_id']);
+                                            continue;
+                                        }
+
+                                        // Any internal user, but the one who created the task
+                                        if ($scope == 'internal' && $type == 'any' && $created_by !== $session_user_id) {
+                                            $user_can_approve = true;
+                                            $approval_id = intval($approval['approval_id']);
+                                            continue;
+                                        }
+
+                                    }
+
                                     ?>
                                     <tr data-task-id="<?= $task_id ?>">
                                         <td>
                                             <?php if ($task_completed_at) { ?>
                                                 <i class="far fa-check-square text-success"></i>
                                             <?php } elseif (lookupUserPermission("module_support") >= 2) { ?>
-                                                <a href="post.php?complete_task=<?php echo $task_id; ?>">
-                                                    <i class="far fa-square text-dark"></i>
-                                                </a>
+
+                                                <?php if ($task_needs_approval) { ?>
+                                                    <i class="fas fa-shield-alt text-warning"
+                                                       data-toggle="tooltip"
+                                                       data-placement="top"
+                                                       title="Approval required"></i>
+
+                                                    <?php if ($user_can_approve) { ?>
+                                                        <a class="confirm-link" href="post.php?approve_ticket_task=<?= $task_id ?>&approval_id=<?= $approval_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
+                                                            <i class="fas fa-thumbs-up text-green"></i>
+                                                        </a>
+                                                    <?php } ?>
+
+                                                    <span class="text-dark ml-2"><?= $task_name ?></span>
+
+                                                <?php } else { ?>
+                                                    <a href="post.php?complete_task=<?php echo $task_id; ?>">
+                                                        <i class="far fa-square text-dark"></i>
+                                                    </a>
+                                                    <span class="text-dark ml-2"><?php echo $task_name; ?></span>
+                                                <?php } ?>
+
                                             <?php } ?>
-                                            <span class="text-dark ml-2"><?php echo $task_name; ?></span>
                                         </td>
                                         <td>
                                             <div class="float-right">
@@ -997,6 +1056,12 @@ if (isset($_GET['ticket_id'])) {
                                                                    data-modal-url="modals/ticket/ticket_task_edit.php?id=<?= $task_id ?>">
                                                                     <i class="fas fa-fw fa-edit mr-2"></i>Edit
                                                                 </a>
+                                                                <?php if (!$task_completed_at) { ?>
+                                                                    <a class="dropdown-item ajax-modal" href="#"
+                                                                       data-modal-url="modals/ticket/ticket_task_approver_add.php?id=<?= $task_id ?>">
+                                                                        <i class="fas fa-fw fa-shield-alt mr-2"></i>Add Approvers
+                                                                    </a>
+                                                                <?php } ?>
                                                                 <?php if ($task_completed_at) { ?>
                                                                     <a class="dropdown-item" href="post.php?undo_complete_task=<?php echo $task_id; ?>">
                                                                         <i class="fas fa-fw fa-arrow-circle-left mr-2"></i>Mark incomplete

@@ -992,3 +992,23 @@ if (isset($_GET['apex_domain_check'])) {
 
     echo json_encode($response);
 }
+
+// Get internal users/techs
+if (isset($_GET['get_internal_users'])) {
+    enforceUserPermission('module_support');
+
+    $sql = mysqli_query(
+        $mysqli,
+        "SELECT user_id, user_name
+         FROM users
+         WHERE user_type = 1 AND user_status = 1 AND user_archived_at IS NULL
+         ORDER BY user_name"
+    );
+
+    while ($row = mysqli_fetch_assoc($sql)) {
+        $response['users'][] = $row;
+    }
+
+    echo json_encode($response);
+    exit;
+}
