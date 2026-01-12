@@ -1591,7 +1591,7 @@ if (isset($_POST['add_ticket_reply'])) {
         $ticket_reply_type = 'Internal';
     }
     // Add Signature to the end of the ticket reply if not Internal and if there is reply
-    if ($ticket_reply !== '' && $ticket_reply_type !== 'Internal') {
+    if ($ticket_reply !== '' && $ticket_reply_type !== 'Internal' && $send_email == 1) {
         $ticket_reply .= getFieldById('user_settings',$session_user_id,'user_config_signature', 'raw');
     }
 
