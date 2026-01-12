@@ -972,9 +972,9 @@ if (isset($_GET['ticket_id'])) {
                                     $task_needs_approval = false;
                                     $task_needs_approval = mysqli_num_rows(mysqli_query(
                                             $mysqli,
-                                            "SELECT 1 FROM task_approvals 
-                                                 WHERE approval_task_id = $task_id 
-                                                   AND approval_status IN ('pending','declined') 
+                                            "SELECT 1 FROM task_approvals
+                                                 WHERE approval_task_id = $task_id
+                                                   AND approval_status IN ('pending','declined')
                                                  LIMIT 1"
                                         )) > 0;
 

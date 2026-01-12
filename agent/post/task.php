@@ -357,7 +357,7 @@ if (isset($_GET['approve_ticket_task'])) {
         redirect();
         exit;
     }
-    if ($required_user == 0 && $type = 'any' && $created_by == $session_user_id) {
+    if ($required_user == 0 && $type == 'any' && $created_by == $session_user_id) {
         flash_alert("You cannot approve your own task", 'error');
         redirect();
         exit;

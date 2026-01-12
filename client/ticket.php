@@ -75,7 +75,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
             SELECT task_id, task_name, approval_id, approval_scope, approval_type, approval_required_user_id, approval_status, approval_url_key
             FROM tasks
             LEFT JOIN task_approvals ON task_id = task_approvals.approval_task_id
-            WHERE task_ticket_id = $ticket_id AND task_completed_at IS NULL AND approval_scope = 'client' AND approval_status = 'pending' 
+            WHERE task_ticket_id = $ticket_id AND task_completed_at IS NULL AND approval_scope = 'client' AND approval_status = 'pending'
         ");
         ?>
 

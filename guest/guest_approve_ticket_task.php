@@ -3,7 +3,7 @@
 require_once "includes/inc_all_guest.php";
 
 //Initialize the HTML Purifier to prevent XSS
-require "../plugins/htmlpurifier/HTMLPurifier.standalone.php";
+require_once "../plugins/htmlpurifier/HTMLPurifier.standalone.php";
 
 $purifier_config = HTMLPurifier_Config::createDefault();
 $purifier_config->set('Cache.DefinitionImpl', null); // Disable cache by setting a non-existent directory or an invalid one
@@ -18,14 +18,14 @@ if (!isset($_GET['task_approval_id'], $_GET['url_key'])) {
 
 // Company info
 $company_sql_row = mysqli_fetch_array(mysqli_query($mysqli, "
-    SELECT 
+    SELECT
         company_phone,
         company_phone_country_code,
-        company_website 
-    FROM 
+        company_website
+    FROM
         companies,
         settings
-    WHERE 
+    WHERE
         companies.company_id = settings.company_id
         AND companies.company_id = 1"
 ));

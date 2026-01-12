@@ -4147,7 +4147,7 @@ if (LATEST_DATABASE_VERSION > CURRENT_DATABASE_VERSION) {
               `approval_approved_by` varchar(255) DEFAULT NULL,
               `approval_url_key` varchar(200) NOT NULL,
               `approval_task_id` int(11) NOT NULL,
-              PRIMARY KEY (`approval_id`)                                          
+              PRIMARY KEY (`approval_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
