@@ -253,7 +253,7 @@ if (isset($_POST['restore'])) {
         mysqli_query($mysqli, "SET FOREIGN_KEY_CHECKS = 0");
         $tables = mysqli_query($mysqli, "SHOW TABLES");
         if ($tables) {
-            while ($row = mysqli_fetch_assoc($tables)) {
+            while ($row = mysqli_fetch_row($tables)) {
                 mysqli_query($mysqli, "DROP TABLE IF EXISTS `" . $row[0] . "`");
             }
         }
