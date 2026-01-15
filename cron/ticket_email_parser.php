@@ -614,7 +614,16 @@ foreach ($messages as $message) {
     // Body (prefer HTML)
     $message_body_html = $message->getHTMLBody();
     $message_body_text = $message->getTextBody();
-    $message_body = $message_body_html ?: nl2br(htmlspecialchars((string)$message_body_text));
+    $message_body_raw  = $message->getRawBody();
+
+    if (!empty($message_body_html)) {
+        $message_body = $message_body_html;
+    } elseif (!empty($message_body_text)) {
+        $message_body = nl2br(htmlspecialchars($message_body_text));
+    } else {
+        // Final fallback
+        $message_body = nl2br(htmlspecialchars($message_body_raw));
+    }
 
     // Handle attachments (inline vs regular)
     $attachments = [];
