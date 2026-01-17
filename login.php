@@ -305,8 +305,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
             // Proceed if selected
             if ($selectedRow !== null && $selectedType !== null) {
 
-                // Clear dual pending once we actually proceed
-                unset($_SESSION['pending_dual_login']);
+                // Cache pending sessions BEFORE unsetting anything (needed for role->MFA and MFA success)
+                $pending_dual = $_SESSION['pending_dual_login'] ?? null;
+                $pending_mfa  = $_SESSION['pending_mfa_login'] ?? null;
+
+                // NOTE: do NOT unset pending_dual_login here anymore; we may still need agent_master_key for MFA or role-step agent login
 
                 $user_id    = intval($selectedRow['user_id']);
                 $user_email = sanitizeInput($selectedRow['user_email']);
@@ -363,9 +366,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                     }
 
                     if ($mfa_is_complete) {
-
-                        // Clear pending MFA if exists
-                        unset($_SESSION['pending_mfa_login']);
 
                         // Remember me token creation
                         if (isset($_POST['remember_me'])) {
@@ -429,17 +429,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                         }
 
                         // Setup encryption session key WITHOUT PASSWORD IN SESSION
-                        // If we are coming from MFA step, master key is in pending_mfa_login.
-                        // If we are coming from login step with no MFA, decrypt now.
                         $site_encryption_master_key = null;
 
                         if ($is_mfa_step) {
-                            $sess = $_SESSION['pending_mfa_login'] ?? null;
-                            if ($sess && isset($sess['agent_master_key'])) {
+                            // Step 3: MFA submit
+                            $sess = $pending_mfa ?? ($_SESSION['pending_mfa_login'] ?? null);
+                            if ($sess && !empty($sess['agent_master_key'])) {
                                 $site_encryption_master_key = $sess['agent_master_key'];
                             }
+
+                        } elseif ($is_role_step) {
+                            // Step 2: role choice (no password available)
+                            $sess = $pending_dual ?? ($_SESSION['pending_dual_login'] ?? null);
+                            if ($sess && !empty($sess['agent_master_key'])) {
+                                $site_encryption_master_key = $sess['agent_master_key'];
+                            }
+
                         } else {
-                            // No MFA step: password exists in this request (Step 1)
+                            // Step 1: initial login (password available in this request)
                             if (!empty($user_encryption_ciphertext)) {
                                 $site_encryption_master_key = decryptUserSpecificKey($user_encryption_ciphertext, $password);
                             }
@@ -448,6 +455,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                         if (!empty($site_encryption_master_key)) {
                             generateUserSessionKey($site_encryption_master_key);
                         }
+
+                        // NOW safe to clear pending sessions AFTER we used them
+                        unset($_SESSION['pending_mfa_login']);
+                        unset($_SESSION['pending_dual_login']);
 
                         // Redirect
                         if (isset($_GET['last_visited']) && (str_starts_with(base64_decode($_GET['last_visited']), '/agent') || str_starts_with(base64_decode($_GET['last_visited']), '/admin'))) {
@@ -461,13 +472,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                         // MFA required — store *only what we need*, not password
                         $pending_mfa_token = bin2hex(random_bytes(32));
 
-                        // If we arrived here from role-choice step, the agent master key may be in pending_dual_login
+                        // If we arrived here from role-choice step, the agent master key may be in cached pending_dual
                         // If we arrived from initial login step, decrypt now (password in memory) and store master key.
                         $agent_master_key = null;
 
                         if ($is_role_step) {
-                            $sess = $_SESSION['pending_dual_login'] ?? null;
-                            if ($sess && isset($sess['agent_master_key'])) {
+                            $sess = $pending_dual ?? ($_SESSION['pending_dual_login'] ?? null);
+                            if ($sess && array_key_exists('agent_master_key', $sess)) {
                                 $agent_master_key = $sess['agent_master_key'];
                             }
                         } else {
@@ -483,6 +494,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             'token'            => $pending_mfa_token,
                             'created'          => time()
                         ];
+
+                        // Now that we've transferred what we need, it's safe to clear the dual-role pending session.
+                        unset($_SESSION['pending_dual_login']);
 
                         $token_field = "
                             <div class='input-group mb-3'>
@@ -566,6 +580,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             // Option B: set session_user_id BEFORE logAction()
                             $session_user_id = $user_id;
                             logAction("Client Login", "Success", "Client contact $user_email successfully logged in locally", $client_id, $user_id);
+
+                            // Clear any pending sessions (avoid stale dual-role/MFA state)
+                            unset($_SESSION['pending_dual_login']);
+                            unset($_SESSION['pending_mfa_login']);
 
                             header("Location: client/index.php");
                             exit();

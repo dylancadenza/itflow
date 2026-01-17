@@ -17,7 +17,7 @@ $client_id = intval($row['client_id']);
 $client_name = nullable_htmlentities($row['client_name']);
 $contact_name = nullable_htmlentities($row['contact_name']);
 $contact_title = nullable_htmlentities($row['contact_title']);
-$contact_department =nullable_htmlentities($row['contact_department']);
+$contact_department = nullable_htmlentities($row['contact_department']);
 $contact_phone_country_code = nullable_htmlentities($row['contact_phone_country_code']);
 $contact_phone = nullable_htmlentities(formatPhoneNumber($row['contact_phone'], $contact_phone_country_code));
 $contact_extension = nullable_htmlentities($row['contact_extension']);
@@ -196,87 +196,10 @@ ob_start();
 
 <div class="modal-body">
 
-    <div class="row">
-
-        <?php if ($contact_phone || $contact_mobile || $contact_extension || $contact_email) { ?>
-            <div class="col-4">
-                <div class="media">
-                    <i class="fas fa-fw fa-user fa-2x text-secondary"></i>
-                    <div class="media-body ml-2">
-                        <dt>Contact Details</dt>
-                        <?php if ($contact_phone) { ?>
-                        <div>
-                            <i class="fas fa-fw fa-phone-alt text-secondary mt-2"></i>
-                            <a href="tel:<?= $contact_phone ?>"><?= $contact_phone ?></a>
-                            <?php if ($contact_extension) { ?>
-                            <span>ext: <?= $contact_extension ?></span>
-                            <?php } ?>
-                        </div>
-                        <?php } ?>
-
-                        <?php if ($contact_mobile) { ?>
-                        <div>
-                            <i class="fas fa-fw fa-mobile-alt text-secondary mt-2"></i>
-                            <a href="tel:<?= $contact_mobile ?>"><?= $contact_mobile ?></a>
-                        </div>
-                        <?php } ?>
-                        <?php if ($contact_email) { ?>
-                        <div>
-                            <i class="fas fa-fw fa-envelope text-secondary mt-2"></i>
-                            <a href='mailto:<?= $contact_email ?>'><?= $contact_email ?></a>
-                            <button type="button" class='btn btn-sm clipboardjs' data-clipboard-text='<?= $contact_email ?>'>
-                            <i class='far fa-copy text-secondary'></i></button>
-                        </div>
-                        <?php } ?>
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
-
-        <?php if ($location_name) { ?>
-            <div class="col-4">
-                <div class="media">
-                    <i class="fas fa-fw fa-map-marker-alt text-secondary fa-2x"></i>
-                    <div class="media-body ml-2">
-                        <dt><?= $location_name ?></dt>
-                        <dd>
-                            <div><?= $location_address ?></div>
-                            <div><?= "$location_city $location_state $location_zip" ?></div>
-                            <div><?= $location_country ?></div>
-                        </dd>
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
-
-        <div class="col-4">
-            <div class="media">
-                <i class="fa fa-fw fa-info-circle text-secondary fa-2x"></i>
-                <div class="media-body ml-2">
-                    <?php if ($contact_primary) { ?>
-                        <span class="text-success text-bold">Primary Contact</span><br>
-                    <?php } ?>
-                    <?php if ($contact_billing) { ?>
-                        <span class="text-dark font-weight-bold">Billing</span><br>
-                    <?php } ?>
-                    <?php if ($contact_technical) { ?>
-                        <span class="text-secondary">Technical</span><br>
-                    <?php } ?>
-                    <?php if ($contact_important) { ?>
-                        <span class="text-dark font-weight-bold">Important</span>
-                    <?php } ?>
-                    <?php if ($contact_pin) { ?>
-                        <div>
-                            Pin: <?= $contact_pin ?>
-                        </div>
-                    <?php } ?>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
     <ul class="nav nav-pills nav-justified mt-3">
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="pill" href="#pills-contact-details"><i class="fas fa-fw fa-user fa-2x"></i><br>Details</a>
+        </li>
         <?php if ($asset_count) { ?>
         <li class="nav-item">
             <a class="nav-link" data-toggle="pill" href="#pills-contact-assets<?= $contact_id ?>"><i class="fas fa-fw fa-desktop fa-2x"></i><br>Assets (<?= $asset_count ?>)</a>
@@ -320,6 +243,90 @@ ob_start();
     </ul>
 
     <div class="tab-content">
+
+        <div class="tab-pane fade" id="pills-contact-details">
+
+            <div class="row">
+
+                <?php if ($contact_phone || $contact_mobile || $contact_extension || $contact_email) { ?>
+                    <div class="col-4">
+                        <div class="media">
+                            <i class="fas fa-fw fa-user fa-2x text-secondary"></i>
+                            <div class="media-body ml-2">
+                                <dt>Contact Details</dt>
+                                <?php if ($contact_phone) { ?>
+                                <div>
+                                    <i class="fas fa-fw fa-phone-alt text-secondary mt-2"></i>
+                                    <a href="tel:<?= $contact_phone ?>"><?= $contact_phone ?></a>
+                                    <?php if ($contact_extension) { ?>
+                                    <span>ext: <?= $contact_extension ?></span>
+                                    <?php } ?>
+                                </div>
+                                <?php } ?>
+
+                                <?php if ($contact_mobile) { ?>
+                                <div>
+                                    <i class="fas fa-fw fa-mobile-alt text-secondary mt-2"></i>
+                                    <a href="tel:<?= $contact_mobile ?>"><?= $contact_mobile ?></a>
+                                </div>
+                                <?php } ?>
+                                <?php if ($contact_email) { ?>
+                                <div>
+                                    <i class="fas fa-fw fa-envelope text-secondary mt-2"></i>
+                                    <a href='mailto:<?= $contact_email ?>'><?= $contact_email ?></a>
+                                    <button type="button" class='btn btn-sm clipboardjs' data-clipboard-text='<?= $contact_email ?>'>
+                                    <i class='far fa-copy text-secondary'></i></button>
+                                </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php } ?>
+
+                <?php if ($location_name) { ?>
+                    <div class="col-4">
+                        <div class="media">
+                            <i class="fas fa-fw fa-map-marker-alt text-secondary fa-2x"></i>
+                            <div class="media-body ml-2">
+                                <dt><?= $location_name ?></dt>
+                                <dd>
+                                    <div><?= $location_address ?></div>
+                                    <div><?= "$location_city $location_state $location_zip" ?></div>
+                                    <div><?= $location_country ?></div>
+                                </dd>
+                            </div>
+                        </div>
+                    </div>
+                <?php } ?>
+
+                <div class="col-4">
+                    <div class="media">
+                        <i class="fa fa-fw fa-info-circle text-secondary fa-2x"></i>
+                        <div class="media-body ml-2">
+                            <?php if ($contact_primary) { ?>
+                                <span class="text-success text-bold">Primary Contact</span><br>
+                            <?php } ?>
+                            <?php if ($contact_billing) { ?>
+                                <span class="text-dark font-weight-bold">Billing</span><br>
+                            <?php } ?>
+                            <?php if ($contact_technical) { ?>
+                                <span class="text-secondary">Technical</span><br>
+                            <?php } ?>
+                            <?php if ($contact_important) { ?>
+                                <span class="text-dark font-weight-bold">Important</span>
+                            <?php } ?>
+                            <?php if ($contact_pin) { ?>
+                                <div>
+                                    Pin: <?= $contact_pin ?>
+                                </div>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
 
         <?php if ($asset_count) { ?>
         <div class="tab-pane fade" id="pills-contact-assets<?= $contact_id ?>">
