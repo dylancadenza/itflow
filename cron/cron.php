@@ -317,6 +317,12 @@ if (mysqli_num_rows($sql_recurring_tickets) > 0) {
             $ticket_status = 2; // Set to open if we've auto-assigned an agent
         }
 
+        if ($client_id) {
+            $client_uri = "&client_id=$client_id";
+        } else {
+            $client_uri = '';
+        }
+
         // Atomically increment and get the new ticket number
         mysqli_query($mysqli, "
             UPDATE settings
@@ -391,7 +397,7 @@ if (mysqli_num_rows($sql_recurring_tickets) > 0) {
         if (filter_var($config_ticket_new_ticket_notification_email, FILTER_VALIDATE_EMAIL)) {
 
             $email_subject = "ITFlow - New Recurring Ticket - $client_name: $ticket_subject";
-            $email_body = "Hello, <br><br>This is a notification that a recurring (scheduled) ticket has been raised in ITFlow. <br>Ticket: $ticket_prefix$ticket_number<br>Client: $client_name<br>Priority: $priority<br>Link: https://$config_base_url/agent/ticket.php?ticket_id=$id&client_id=$client_id <br><br>--------------------------------<br><br><b>$ticket_subject</b><br>$ticket_details";
+            $email_body = "Hello, <br><br>This is a notification that a recurring (scheduled) ticket has been raised in ITFlow. <br>Ticket: $ticket_prefix$ticket_number<br>Client: $client_name<br>Priority: $priority<br>Link: https://$config_base_url/agent/ticket.php?ticket_id=$id$client_uri <br><br>--------------------------------<br><br><b>$ticket_subject</b><br>$ticket_details";
 
             $email = [
                     'from' => $config_ticket_from_email,
