@@ -210,7 +210,6 @@ if (isset($_POST['edit_document'])) {
             document_description = '$description',
             document_content     = '$content',
             document_content_raw = '$content_raw',
-            document_folder_id   = $folder,
             document_updated_by  = $session_user_id
          WHERE document_id = $document_id"
     );
