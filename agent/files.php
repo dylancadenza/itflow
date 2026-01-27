@@ -164,7 +164,9 @@ function display_folders($parent_folder_id, $client_id, $indent = 0, $render_roo
         echo ' ' . $folder_name;
 
         if ($subfolder_count > 0) {
-            echo '<i class="fas fa-chevron-' . ($on_active_path ? 'down' : 'right') . ' text-muted ml-2"></i>';
+            $is_expanded = $folders_expanded || $on_active_path;
+
+            echo '<i class="fas fa-chevron-' . ($is_expanded ? 'down' : 'right') . ' text-muted ml-2"></i>';
         }
 
         if ($num_total > 0) {
