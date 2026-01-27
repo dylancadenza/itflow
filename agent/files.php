@@ -23,6 +23,13 @@ if (!empty($_GET['view'])) {
     $view = 0;
 }
 
+// Folder tree expanded state: 1 = expand all, 0 = collapsed (default)
+if (isset($_GET['folders_expanded'])) {
+    $folders_expanded = intval($_GET['folders_expanded']);
+} else {
+    $folders_expanded = 0;
+}
+
 if (!isset($q)) {
     $q = '';
 }
@@ -73,13 +80,13 @@ function is_ancestor_folder($folder_id, $current_folder_id, $client_id) {
 }
 
 function display_folders($parent_folder_id, $client_id, $indent = 0, $render_root = false) {
-    global $mysqli, $get_folder_id, $session_user_role, $archive_query, $archived, $num_root_items;
+    global $mysqli, $get_folder_id, $session_user_role, $archive_query, $archived, $num_root_items, $folders_expanded;
 
     // Always render root (only once)
     if ($parent_folder_id == 0 && $indent == 0) {
         echo '<li class="nav-item">';
         echo '<a class="nav-link ' . ($get_folder_id == 0 ? 'active' : '') . '"';
-        echo ' href="?client_id=' . $client_id . '&folder_id=0&archived=' . $archived . '">';
+        echo ' href="?client_id=' . $client_id . '&folder_id=0&archived=' . $archived . '&folders_expanded=' . $folders_expanded . '">';
         echo '/';
 
         if ($num_root_items > 0) {
@@ -133,15 +140,22 @@ function display_folders($parent_folder_id, $client_id, $indent = 0, $render_roo
         );
         $subfolder_count  = intval(mysqli_fetch_assoc($subfolder_result)['count']);
 
+        // Active or ancestor of active folder = on active path
+        $on_active_path = ($get_folder_id == $folder_id) || is_ancestor_folder($folder_id, $get_folder_id, $client_id);
+
+        // Option C: indent with padding (no AdminLTE sidebar CSS required)
+        // Tune these numbers if you want tighter/looser indent
+        $indent_px = 12 * $indent; // 12px per level
+
         echo '<li class="nav-item">';
         echo '<div class="row">';
         echo '<div class="col-10">';
+
         echo '<a class="nav-link ' . ($get_folder_id == $folder_id ? 'active' : '') . '"';
-        echo ' href="?client_id=' . $client_id . '&folder_id=' . $folder_id . '&archived=' . $archived . '">';
+        echo ' style="padding-left: ' . (12 + $indent_px) . 'px;"';
+        echo ' href="?client_id=' . $client_id . '&folder_id=' . $folder_id . '&archived=' . $archived . '&folders_expanded=' . $folders_expanded . '">';
 
-        echo str_repeat('&nbsp;', $indent * 4);
-
-        if ($get_folder_id == $folder_id || is_ancestor_folder($folder_id, $get_folder_id, $client_id)) {
+        if ($on_active_path) {
             echo '<i class="fas fa-fw fa-folder-open"></i>';
         } else {
             echo '<i class="fas fa-fw fa-folder"></i>';
@@ -149,12 +163,17 @@ function display_folders($parent_folder_id, $client_id, $indent = 0, $render_roo
 
         echo ' ' . $folder_name;
 
+        if ($subfolder_count > 0) {
+            echo '<i class="fas fa-chevron-' . ($on_active_path ? 'down' : 'right') . ' text-muted ml-2"></i>';
+        }
+
         if ($num_total > 0) {
             echo "<span class='badge badge-pill badge-dark float-right mt-1'>$num_total</span>";
         }
 
         echo '</a>';
-        echo '</div>';
+        echo '</div>'; // col-10
+
         echo '<div class="col-2">';
         ?>
         <div class="dropdown">
@@ -175,10 +194,11 @@ function display_folders($parent_folder_id, $client_id, $indent = 0, $render_roo
             </div>
         </div>
         <?php
-        echo '</div>';
-        echo '</div>';
+        echo '</div>'; // col-2
+        echo '</div>'; // row
 
-        if ($subfolder_count > 0) {
+        // Collapsed by default: ONLY render children if folder is on active path
+        if ($subfolder_count > 0 && ($folders_expanded || $on_active_path)) {
             echo '<ul class="nav nav-pills flex-column bg-light">';
             display_folders($folder_id, $client_id, $indent + 1);
             echo '</ul>';
@@ -187,6 +207,7 @@ function display_folders($parent_folder_id, $client_id, $indent = 0, $render_roo
         echo '</li>';
     }
 }
+
 
 // ---------------------------------------------
 // DATA LOAD
@@ -444,7 +465,23 @@ $num_root_items = intval($row_root_files['num']) + intval($row_root_docs['num'])
 
             <!-- Folders -->
             <div class="col-md-3 border-right mb-3">
-                <h4>Folders</h4>
+                <div class="d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0">Folders</h4>
+
+                    <?php
+                    $toggle_value = $folders_expanded ? 0 : 1;
+                    $toggle_title = $folders_expanded
+                        ? 'Collapse all folders'
+                        : 'Expand all folders';
+                    ?>
+
+                    <a href="?<?= http_build_query(array_merge($_GET, ['folders_expanded' => $toggle_value])) ?>"
+                       class="btn btn-tool"
+                       title="<?= $toggle_title ?>"
+                       aria-label="<?= $toggle_title ?>">
+                           <i class="fas <?= $folders_expanded ? 'fa-chevron-down' : 'fa-chevron-right' ?>"></i>
+                    </a>
+                </div>
                 <hr>
                 <ul class="nav nav-pills flex-column bg-light">
 
