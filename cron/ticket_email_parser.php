@@ -229,8 +229,7 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
     $message = nl2br($message);
 
     // 3) Final wrapper
-    $message = "<i>Email from: $from_email at $date:-</i><br><br>
-    <div style='line-height:1.5;'>$message</div>";
+    $message = "<i>Email from: $from_email at $date:-</i><br><br><div style='line-height:1.5;'>$message</div>";
 
     $ticket_number_esc = intval($ticket_number);
     $message_esc = mysqli_real_escape_string($mysqli, $message);
