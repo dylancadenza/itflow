@@ -80,11 +80,11 @@ if (isset($_GET['ticket_id'])) {
 
         //Set Ticket Badge Color based of priority
         if ($ticket_priority == "High") {
-            $ticket_priority_display = "<span class='p-2 badge badge-danger'>$ticket_priority</span>";
+            $ticket_priority_display = "<span class='p-2 badge badge-pill badge-danger'>$ticket_priority</span>";
         } elseif ($ticket_priority == "Medium") {
-            $ticket_priority_display = "<span class='p-2 badge badge-warning'>$ticket_priority</span>";
+            $ticket_priority_display = "<span class='p-2 badge badge-pill badge-warning'>$ticket_priority</span>";
         } elseif ($ticket_priority == "Low") {
-            $ticket_priority_display = "<span class='p-2 badge badge-info'>$ticket_priority</span>";
+            $ticket_priority_display = "<span class='p-2 badge badge-pill badge-info'>$ticket_priority</span>";
         } else {
             $ticket_priority_display = "";
         }
@@ -463,20 +463,21 @@ if (isset($_GET['ticket_id'])) {
             <div class="card card-body">
 
                 <div title="<?php echo $ticket_updated_at; ?>">
-                    <i class="fa fa-fw fa-history text-secondary mr-2"></i>Updated: <strong><?php echo $ticket_updated_at_ago; ?></strong>
+                    <i class="fa fa-fw fa-history text-secondary mr-2"></i>Last updated: <strong><?= date('M d, Y • h:m A', strtotime($ticket_updated_at)) . " ($ticket_updated_at_ago)" ?></strong>
                 </div>
 
                 <!-- Ticket assign (disable if closed -->
                 <?php if (empty($ticket_closed_at)) { ?>
                     <div class="mt-1">
+                        <i class="fas fa-fw fa-user-check mr-2 text-secondary"></i>Assigned Agent:
                         <a class="ajax-modal" href="#"
-                           data-modal-url="modals/ticket/ticket_assign.php?id=<?= $ticket_id ?>">
-                            <i class="fas fa-fw fa-user mr-2 text-secondary"></i><?php echo $ticket_assigned_to_display; ?>
+                            data-modal-url="modals/ticket/ticket_assign.php?id=<?= $ticket_id ?>">
+                            <?= $ticket_assigned_to_display ?>
                         </a>
                     </div>
                 <?php } else { ?>
                     <div class="mt-1">
-                        <i class="fas fa-fw fa-user mr-2 text-secondary"></i><?php echo $ticket_assigned_to_display; ?>
+                        <i class="fas fa-fw fa-user-check mr-2 text-secondary"></i>Assigned Agent: <?php echo $ticket_assigned_to_display; ?>
                     </div>
                 <?php } ?>
                 <!-- End ticket assign -->
@@ -484,14 +485,13 @@ if (isset($_GET['ticket_id'])) {
 
             <div class="card card-body">
                 <div>
-                    <i class="fa fa-fw fa-thermometer-half text-secondary mr-1"></i>
-                    <a href="#"
+                    <a href="#" title="Priority"
                         <?php if (lookupUserPermission("module_support") >= 2 && empty($ticket_closed_at)) { ?>
                             class="ajax-modal"
                             data-modal-url="modals/ticket/ticket_priority.php?id=<?= $ticket_id ?>"
                         <?php } ?>
                     >
-                        <?php echo $ticket_priority_display; ?>
+                        <?= $ticket_priority_display ?>
                     </a>
                 </div>
 
@@ -518,14 +518,14 @@ if (isset($_GET['ticket_id'])) {
                         </div>
                     <?php } else { ?>
                         <div class="mt-1">
-                            <i class="fa fa-fw fa-dollar-sign text-secondary mr-2"></i>Ticket is
+                            <i class="fa fa-fw fa-dollar-sign text-secondary mr-2"></i>Billable:
                             <a class="ajax-modal" href="#"
                                data-modal-url="modals/ticket/ticket_billable.php?id=<?= $ticket_id ?>">
                                 <?php
                                 if ($ticket_billable == 1) {
-                                    echo "<span class='text-bold text-dark'>Billable</span>";
+                                    echo "<span class='text-bold text-dark'>Yes</span>";
                                 } else {
-                                    echo "<span class='text-muted'>Not Billable</span>";
+                                    echo "<span class='text-muted'>No</span>";
                                 }
                                 ?>
                             </a>
@@ -561,7 +561,7 @@ if (isset($_GET['ticket_id'])) {
 
                     <div class="card-header bg-dark">
                         <h5 class="card-title">
-                            Ticket Details
+                            Description / Comments
                         </h5>
                         <?php if (empty($ticket_closed_at)) { ?>
                         <div class="card-tools">
@@ -577,7 +577,7 @@ if (isset($_GET['ticket_id'])) {
                         while ($ticket_attachment = mysqli_fetch_assoc($sql_ticket_attachments)) {
                             $name = nullable_htmlentities($ticket_attachment['ticket_attachment_name']);
                             $ref_name = nullable_htmlentities($ticket_attachment['ticket_attachment_reference_name']);
-                            echo "<hr class=''><i class='fas fa-fw fa-paperclip text-secondary mr-1'></i>$name | <a href='../uploads/tickets/$ticket_id/$ref_name' download='$name'><i class='fas fa-fw fa-download mr-1'></i>Download</a> | <a target='_blank' href='../uploads/tickets/$ticket_id/$ref_name'><i class='fas fa-fw fa-external-link-alt mr-1'></i>View</a>";
+                            echo "<hr class=''><i class='fas fa-fw fa-paperclip text-secondary mr-1'></i>$name <a target='_blank' class='mr-1 ml-1' href='../uploads/tickets/$ticket_id/$ref_name'>[View]</a><a href='../uploads/tickets/$ticket_id/$ref_name' download='$name'>[Download]</a>";
                         }
                         ?>
                     </div>
@@ -586,8 +586,6 @@ if (isset($_GET['ticket_id'])) {
 
                 <!-- Only show ticket reply modal if status is not closed -->
                 <?php if (lookupUserPermission("module_support") >= 2 && empty($ticket_resolved_at) && empty($ticket_closed_at)) { ?>
-
-
 
                         <form action="post.php" method="post" autocomplete="off">
                             <input type="hidden" name="ticket_id" id="ticket_id" value="<?php echo $ticket_id; ?>">
@@ -598,27 +596,28 @@ if (isset($_GET['ticket_id'])) {
                                 <div class="form-group">
                                     <div class="btn-group btn-block btn-group-toggle" data-toggle="buttons">
                                         <label class="btn btn-outline-dark active">
-                                            <input type="radio" name="public_reply_type" value="0" checked>Internal Note
+                                            <input type="radio" name="public_reply_type" value="0" checked>Internal
                                         </label>
                                         <?php if ($contact_email) { ?>
                                         <label class="btn btn-outline-info">
-                                            <input type="radio" name="public_reply_type" value="2">Public Comment & Email
+                                            <input type="radio" name="public_reply_type" value="2">Public + Email
                                         </label>
                                         <?php } ?>
                                         <label class="btn btn-outline-info">
-                                            <input type="radio" name="public_reply_type" value="1">Public Comment
+                                            <input type="radio" name="public_reply_type" value="1">Public
                                         </label>
                                     </div>
                                 </div>
 
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group mb-0">
                                 <textarea
                                     class="form-control tinymceTicket" name="ticket_reply"
                                     placeholder="Type a response">
                                 </textarea>
                             </div>
+
 
                             <div class="card card-body pb-0">
 
@@ -732,10 +731,10 @@ if (isset($_GET['ticket_id'])) {
                                         </span>
                                     <?php } ?>
 
-                                    <div class="ml-3">
+                                    <div class="ml-2">
                                         <h3 class="card-title"><?php echo $ticket_reply_by_display; ?></h3>
                                         <div>
-                                            <?php if ($ticket_reply_type !== "Client") { ?>
+                                            <?php if ($ticket_reply_type !== "Client" && $ticket_reply_time_worked !== "00:00:00") { ?>
                                                 <div>
                                                     <br>
                                                     <small>
@@ -816,10 +815,10 @@ if (isset($_GET['ticket_id'])) {
 
             <div class="col-md-3">
 
-                <!-- Ticket details right card -->
+                <!-- Ticket activity right card -->
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title"><i class="fas fa-fw fa-life-ring mr-2"></i>Ticket Details</h5>
+                        <h5 class="card-title"><i class="fas fa-fw fa-clock mr-2"></i>Activity Summary</h5>
 
                         <div class="card-tools">
                             <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -869,7 +868,7 @@ if (isset($_GET['ticket_id'])) {
                         <!-- Time tracking -->
                         <?php if ($ticket_total_reply_time) { ?>
                             <div class="mt-1">
-                                <i class="far fa-fw fa-clock text-secondary mr-2"></i><strong class="mr-2">Time worked:</strong><?= formatDuration($ticket_total_reply_time) ?>
+                                <i class="far fa-fw fa-clock text-secondary mr-2"></i><strong class="mr-2">Total time worked:</strong><?= formatDuration($ticket_total_reply_time) ?>
                             </div>
                         <?php } ?>
 
