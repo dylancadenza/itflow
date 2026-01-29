@@ -70,47 +70,78 @@ $sql_tax = mysqli_query($mysqli, "SELECT `tax_name` FROM `taxes`");
                     </thead>
                     <tbody>
                     <?php
+
+                    // Running totals
+                    $monthly_totals  = array_fill(1, 12, 0.0);
+                    $quarterly_totals = array_fill(1, 4, 0.0);
+                    $grand_total = 0.0;
+
                     while ($row = mysqli_fetch_assoc($sql_tax)) {
-                        $tax_name = sanitizeInput($row['tax_name']);
+
+                        $tax_name_raw = $row['tax_name'];
+                        $tax_name = sanitizeInput($tax_name_raw);
+
                         echo "<tr>";
-                        echo "<td>" . $row['tax_name'] . "</td>";
+                        echo "<td>" . nullable_htmlentities($tax_name_raw) . "</td>";
 
                         if ($view == 'monthly') {
+
                             for ($i = 1; $i <= 12; $i++) {
-                                $monthly_tax = getMonthlyTax($tax_name, $i, $year, $mysqli);
+                                $monthly_tax = (float) getMonthlyTax($tax_name, $i, $year, $mysqli);
+
+                                // Accumulate totals
+                                $monthly_totals[$i] += $monthly_tax;
+                                $grand_total += $monthly_tax;
+
                                 echo "<td class='text-right'>" . numfmt_format_currency($currency_format, $monthly_tax, $company_currency) . "</td>";
                             }
+
+                            // Row total = sum of this tax’s 12 months
+                            $row_total = 0.0;
+                            for ($i = 1; $i <= 12; $i++) {
+                                $row_total += (float) getMonthlyTax($tax_name, $i, $year, $mysqli);
+                            }
+                            echo "<td class='text-right text-bold'>" . numfmt_format_currency($currency_format, $row_total, $company_currency) . "</td>";
+
                         } else {
+
+                            $row_total = 0.0;
                             for ($q = 1; $q <= 4; $q++) {
-                                $quarterly_tax = getQuarterlyTax($tax_name, $q, $year, $mysqli);
+                                $quarterly_tax = (float) getQuarterlyTax($tax_name, $q, $year, $mysqli);
+
+                                // Accumulate totals
+                                $quarterly_totals[$q] += $quarterly_tax;
+                                $grand_total += $quarterly_tax;
+
+                                $row_total += $quarterly_tax;
+
                                 echo "<td class='text-right'>" . numfmt_format_currency($currency_format, $quarterly_tax, $company_currency) . "</td>";
                             }
+
+                            echo "<td class='text-right text-bold'>" . numfmt_format_currency($currency_format, $row_total, $company_currency) . "</td>";
                         }
 
-                        // Calculate total for row and echo bold
-                        $total_tax = getTotalTax($tax_name, $year, $mysqli);
-                        echo "<td class='text-right text-bold'>" . numfmt_format_currency($currency_format, $total_tax, $company_currency) . "</td>";
                         echo "</tr>";
                     }
-                    ?>
-                    <tr>
-                        <th>Total</th>
-                        <?php
-                        if ($view == 'monthly') {
-                            for ($i = 1; $i <= 12; $i++) {
-                                $monthly_tax = getMonthlyTax($tax_name, $i, $year, $mysqli);
-                                echo "<th class='text-right'>" . numfmt_format_currency($currency_format, $monthly_tax, $company_currency) . "</th>";
-                            }
-                        } else {
-                            for ($q = 1; $q <= 4; $q++) {
-                                $quarterly_tax = getQuarterlyTax($tax_name, $q, $year, $mysqli);
-                                echo "<th class='text-right'>" . numfmt_format_currency($currency_format, $quarterly_tax, $company_currency) . "</th>";
-                            }
-                        }
-                        ?>
-                        <td class="text-right"></td>
-                    </tr>
 
+                    // Totals row
+                    echo "<tr>";
+                    echo "<th>Total</th>";
+
+                    if ($view == 'monthly') {
+                        for ($i = 1; $i <= 12; $i++) {
+                            echo "<th class='text-right text-bold'>" . numfmt_format_currency($currency_format, $monthly_totals[$i], $company_currency) . "</th>";
+                        }
+                    } else {
+                        for ($q = 1; $q <= 4; $q++) {
+                            echo "<th class='text-right text-bold'>" . numfmt_format_currency($currency_format, $quarterly_totals[$q], $company_currency) . "</th>";
+                        }
+                    }
+
+                    echo "<th class='text-right text-bold'>" . numfmt_format_currency($currency_format, $grand_total, $company_currency) . "</th>";
+                    echo "</tr>";
+
+                    ?>
                     </tbody>
                 </table>
             </div>
