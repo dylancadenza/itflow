@@ -4,7 +4,7 @@ require_once '../../../includes/modal_header.php';
 
 $client_id = intval($_GET['client_id'] ?? 0);
 $contact_id = intval($_GET['contact_id'] ?? 0);
-$type = nullable_htmlentities($_GET['type'] ?? '');
+$type = nullable_htmlentities(ucwords($_GET['type']) ?? '');
 
 if ($client_id) {
     $sql_network_select = mysqli_query($mysqli, "SELECT * FROM networks WHERE network_archived_at IS NULL AND network_client_id = $client_id ORDER BY network_name ASC");
@@ -33,7 +33,7 @@ ob_start();
 
 ?>
 <div class="modal-header bg-dark">
-    <h5 class="modal-title"><i class="fa fa-fw fa-desktop mr-2"></i>New <?php if ($type) { echo ucwords($type); } else { echo "Asset"; } ?></h5>
+    <h5 class="modal-title"><i class="fa fa-fw fa-desktop mr-2"></i>New <?php if ($type) { echo $type; } ?> Asset</h5>
     <button type="button" class="close text-white" data-dismiss="modal">
         <span>&times;</span>
     </button>
@@ -133,7 +133,7 @@ ob_start();
                 </div>
 
                 <?php //Do not display Make Model or Serial if Virtual is selected
-                if ($type !== 'virtual') { ?>
+                if ($type !== 'Virtual') { ?>
                     <div class="form-group">
                         <label>Make</label>
                         <div class="input-group">
@@ -165,7 +165,7 @@ ob_start();
                     </div>
                 <?php } ?>
 
-                <?php if ($type !== 'network' && $type !== 'other') { ?>
+                <?php if ($type !== 'Network' && $type !== 'Other') { ?>
                     <div class="form-group">
                         <label>Operating System</label>
                         <div class="input-group">
@@ -386,7 +386,7 @@ ob_start();
                 </div>
                 <?php } ?>
 
-                <?php if ($type !== 'virtual') { ?>
+                <?php if ($type !== 'Virtual') { ?>
                     <div class="form-group">
                         <label>Purchase Reference</label>
                         <div class="input-group">
@@ -418,7 +418,7 @@ ob_start();
                     </div>
                 </div>
 
-                <?php if ($type !== 'virtual') { ?>
+                <?php if ($type !== 'Virtual') { ?>
                     <div class="form-group">
                         <label>Warranty Expire</label>
                         <div class="input-group">
