@@ -299,7 +299,7 @@ $sql_categories_filter = mysqli_query(
                                         </a>
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item ajax-modal" href="#"
-                                            data-modal-url="modals/ticket/ticket_bulk_merge.php"
+                                            data-modal-url="modals/ticket/ticket_bulk_merge_v2.php"
                                             data-bulk="true">
                                             <i class="fas fa-fw fa-clone mr-2"></i>Merge
                                         </a>
