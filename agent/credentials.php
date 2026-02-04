@@ -93,7 +93,7 @@ $sql = mysqli_query(
     $access_permission_query
     $client_query
     GROUP BY c.credential_id
-    ORDER BY c.credential_important DESC, $sort $order LIMIT $record_from, $record_to"
+    ORDER BY c.credential_favorite DESC, $sort $order LIMIT $record_from, $record_to"
 );
 
 $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
@@ -331,7 +331,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                             $credential_note = nullable_htmlentities($row['credential_note']);
                             $credential_created_at = nullable_htmlentities($row['credential_created_at']);
                             $credential_archived_at = nullable_htmlentities($row['credential_archived_at']);
-                            $credential_important = intval($row['credential_important']);
+                            $credential_favorite = intval($row['credential_favorite']);
                             $credential_contact_id = intval($row['credential_contact_id']);
                             $contact_name = nullable_htmlentities($row['contact_name']);
                             $credential_asset_id = intval($row['credential_asset_id']);
@@ -407,7 +407,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 
                         ?>
-                            <tr class="<?php if (!empty($credential_important)) { echo "text-bold"; } ?>">
+                            <tr class="<?php if ($credential_favorite) { echo "text-bold"; } ?>">
                                 <td class="pr-0">
                                     <div class="form-check">
                                         <input class="form-check-input bulk-select" type="checkbox" name="credential_ids[]" value="<?php echo $credential_id ?>">

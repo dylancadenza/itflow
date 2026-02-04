@@ -297,9 +297,10 @@ $sql_asset_retired = mysqli_query(
 
     </div>
 
+    <?php if (mysqli_num_rows($sql_favorite_assets) > 0) { ?>
+
     <div class="col-md-4">
 
-        <?php if (mysqli_num_rows($sql_favorite_assets) > 0) { ?>
         <div class="card card-dark mb-3">
             <div class="card-header">
                 <h5 class="card-title"><i class="fas fa-fw fa-star mr-2"></i>Favorite Assets</h5>
@@ -332,9 +333,10 @@ $sql_asset_retired = mysqli_query(
                 </table>
             </div>
         </div>
-        <?php } ?>
 
     </div>
+
+    <?php } ?>
 
     <?php if (mysqli_num_rows($sql_shared_items) > 0) { ?>
 
