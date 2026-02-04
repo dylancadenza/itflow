@@ -18,9 +18,23 @@ if (isset($_POST['add_role'])) {
 
     $role_id = mysqli_insert_id($mysqli);
 
+    // Insert role permissions (only if not admin)
+    if ($admin == 0) {
+        foreach ($_POST as $key => $value) {
+            if (str_contains($key, '##module_')) {
+                $module_id = intval(explode('##', $key)[0]);
+                $access_level = intval($value);
+
+                if ($access_level > 0) {
+                    mysqli_query($mysqli, "INSERT INTO user_role_permissions SET user_role_id = $role_id, module_id = $module_id, user_role_permission_level = $access_level");
+                }
+            }
+        }
+    }
+
     logAction("User Role", "Create", "$session_name created user role $name", 0, $role_id);
 
-    flash_alert("User Role <strong$name</strong> created");
+    flash_alert("User Role <strong>$name</strong> created");
 
     redirect();
 
