@@ -23,6 +23,14 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\OAuthTokenProvider;
 
+if (!defined('GOOGLE_OAUTH_TOKEN_URL')) {
+    define('GOOGLE_OAUTH_TOKEN_URL', 'https://oauth2.googleapis.com/token');
+}
+
+if (!defined('MICROSOFT_OAUTH_BASE_URL')) {
+    define('MICROSOFT_OAUTH_BASE_URL', 'https://login.microsoftonline.com/');
+}
+
 /** =======================================================================
  *  XOAUTH2 Token Provider for PHPMailer (simple “static” provider)
  * ======================================================================= */
@@ -95,7 +103,7 @@ file_put_contents($lock_file_path, "Locked");
 /** =======================================================================
  *  Mail OAuth helpers + sender function
  * ======================================================================= */
-function token_is_expired(?string $expires_at): bool {
+function tokenIsExpired(?string $expires_at): bool {
     if (empty($expires_at)) {
         return true;
     }
@@ -109,7 +117,7 @@ function token_is_expired(?string $expires_at): bool {
     return ($ts - 60) <= time();
 }
 
-function http_form_post(string $url, array $fields): array {
+function httpFormPost(string $url, array $fields): array {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
@@ -130,7 +138,7 @@ function http_form_post(string $url, array $fields): array {
     ];
 }
 
-function persist_mail_oauth_tokens(string $access_token, string $expires_at, ?string $refresh_token = null): void {
+function persistMailOauthTokens(string $access_token, string $expires_at, ?string $refresh_token = null): void {
     global $mysqli;
 
     $access_token_esc = mysqli_real_escape_string($mysqli, $access_token);
@@ -145,65 +153,57 @@ function persist_mail_oauth_tokens(string $access_token, string $expires_at, ?st
     mysqli_query($mysqli, "UPDATE settings SET config_mail_oauth_access_token = '{$access_token_esc}', config_mail_oauth_access_token_expires_at = '{$expires_at_esc}'{$refresh_sql} WHERE company_id = 1");
 }
 
-function refresh_mail_oauth_access_token(string $provider, string $oauth_client_id, string $oauth_client_secret, string $oauth_tenant_id, string $oauth_refresh_token): ?array {
-    if (empty($oauth_client_id) || empty($oauth_client_secret) || empty($oauth_refresh_token)) {
-        return null;
-    }
+function refreshMailOauthAccessToken(string $provider, string $oauth_client_id, string $oauth_client_secret, string $oauth_tenant_id, string $oauth_refresh_token): ?array {
+    $result = null;
+    $response = null;
 
-    if ($provider === 'google_oauth') {
-        $response = http_form_post('https://oauth2.googleapis.com/token', [
-            'client_id' => $oauth_client_id,
-            'client_secret' => $oauth_client_secret,
-            'refresh_token' => $oauth_refresh_token,
-            'grant_type' => 'refresh_token',
-        ]);
-    } elseif ($provider === 'microsoft_oauth') {
-        if (empty($oauth_tenant_id)) {
-            return null;
+    if (!empty($oauth_client_id) && !empty($oauth_client_secret) && !empty($oauth_refresh_token)) {
+        if ($provider === 'google_oauth') {
+            $response = httpFormPost(GOOGLE_OAUTH_TOKEN_URL, [
+                'client_id' => $oauth_client_id,
+                'client_secret' => $oauth_client_secret,
+                'refresh_token' => $oauth_refresh_token,
+                'grant_type' => 'refresh_token',
+            ]);
+        } elseif ($provider === 'microsoft_oauth' && !empty($oauth_tenant_id)) {
+            $token_url = MICROSOFT_OAUTH_BASE_URL . rawurlencode($oauth_tenant_id) . "/oauth2/v2.0/token";
+            $response = httpFormPost($token_url, [
+                'client_id' => $oauth_client_id,
+                'client_secret' => $oauth_client_secret,
+                'refresh_token' => $oauth_refresh_token,
+                'grant_type' => 'refresh_token',
+            ]);
         }
-
-        $token_url = "https://login.microsoftonline.com/" . rawurlencode($oauth_tenant_id) . "/oauth2/v2.0/token";
-        $response = http_form_post($token_url, [
-            'client_id' => $oauth_client_id,
-            'client_secret' => $oauth_client_secret,
-            'refresh_token' => $oauth_refresh_token,
-            'grant_type' => 'refresh_token',
-        ]);
-    } else {
-        return null;
     }
 
-    if (!$response['ok']) {
-        return null;
+    if (is_array($response) && !empty($response['ok'])) {
+        $json = json_decode($response['body'], true);
+
+        if (is_array($json) && !empty($json['access_token'])) {
+            $expires_at = date('Y-m-d H:i:s', time() + (int)($json['expires_in'] ?? 3600));
+            $result = [
+                'access_token' => $json['access_token'],
+                'expires_at' => $expires_at,
+                'refresh_token' => $json['refresh_token'] ?? null,
+            ];
+        }
     }
 
-    $json = json_decode($response['body'], true);
-
-    if (!is_array($json) || empty($json['access_token'])) {
-        return null;
-    }
-
-    $expires_at = date('Y-m-d H:i:s', time() + (int)($json['expires_in'] ?? 3600));
-
-    return [
-        'access_token' => $json['access_token'],
-        'expires_at' => $expires_at,
-        'refresh_token' => $json['refresh_token'] ?? null,
-    ];
+    return $result;
 }
 
-function resolve_mail_oauth_access_token(string $provider, string $oauth_client_id, string $oauth_client_secret, string $oauth_tenant_id, string $oauth_refresh_token, string $oauth_access_token, string $oauth_access_token_expires_at): ?string {
-    if (!empty($oauth_access_token) && !token_is_expired($oauth_access_token_expires_at)) {
+function resolveMailOauthAccessToken(string $provider, string $oauth_client_id, string $oauth_client_secret, string $oauth_tenant_id, string $oauth_refresh_token, string $oauth_access_token, string $oauth_access_token_expires_at): ?string {
+    if (!empty($oauth_access_token) && !tokenIsExpired($oauth_access_token_expires_at)) {
         return $oauth_access_token;
     }
 
-    $tokens = refresh_mail_oauth_access_token($provider, $oauth_client_id, $oauth_client_secret, $oauth_tenant_id, $oauth_refresh_token);
+    $tokens = refreshMailOauthAccessToken($provider, $oauth_client_id, $oauth_client_secret, $oauth_tenant_id, $oauth_refresh_token);
 
     if (!is_array($tokens) || empty($tokens['access_token']) || empty($tokens['expires_at'])) {
         return null;
     }
 
-    persist_mail_oauth_tokens($tokens['access_token'], $tokens['expires_at'], $tokens['refresh_token'] ?? null);
+    persistMailOauthTokens($tokens['access_token'], $tokens['expires_at'], $tokens['refresh_token'] ?? null);
 
     return $tokens['access_token'];
 }
@@ -264,7 +264,7 @@ function sendQueueEmail(
         $mail->AuthType = 'XOAUTH2';
         $mail->Username = $username;
 
-        $access_token = resolve_mail_oauth_access_token(
+        $access_token = resolveMailOauthAccessToken(
             $provider,
             trim($oauth_client_id),
             trim($oauth_client_secret),
