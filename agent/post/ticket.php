@@ -734,7 +734,7 @@ if (isset($_POST['assign_ticket'])) {
         mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket', notification = 'Ticket $ticket_prefix$ticket_number - Subject: $ticket_subject has been assigned to you by $session_name', notification_action = '/agent/ticket.php?ticket_id=$ticket_id$client_uri', notification_client_id = $client_id, notification_user_id = $assigned_to");
 
         // Email Notification
-        if ((!empty($config_smtp_host) || !empty($config_smtp_provider))) {
+        if (!empty($config_smtp_host) || !empty($config_smtp_provider)) {
 
             // Sanitize Config vars from get_settings.php
             $config_ticket_from_name = sanitizeInput($config_ticket_from_name);
@@ -926,7 +926,7 @@ if (isset($_POST['bulk_assign_ticket'])) {
             mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket', notification = '$ticket_count Tickets have been assigned to you by $session_name', notification_action = 'tickets.php?status=Open&assigned=$assign_to', notification_client_id = $client_id, notification_user_id = $assign_to");
 
             // Agent Email Notification
-            if ((!empty($config_smtp_host) || !empty($config_smtp_provider))) {
+            if (!empty($config_smtp_host) || !empty($config_smtp_provider)) {
 
                 // Sanitize Config vars from get_settings.php
                 $config_ticket_from_name = sanitizeInput($config_ticket_from_name);
