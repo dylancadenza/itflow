@@ -187,6 +187,78 @@ if (isset($_POST['bulk_assign_credential_tags'])) {
 
 }
 
+if (isset($_POST['bulk_favorite_credentials'])) {
+
+    validateCSRFToken($_POST['csrf_token']);
+
+    enforceUserPermission('module_support', 2);
+
+    if (isset($_POST['credential_ids'])) {
+
+        $count = count($_POST['credential_ids']);
+
+        foreach ($_POST['credential_ids'] as $credential_id) {
+
+            $credential_id = intval($credential_id);
+
+            // Get Asset Name and Client ID for logging and alert message
+            $sql = mysqli_query($mysqli,"SELECT credential_name, credential_client_id FROM credentials WHERE credential_id = $credential_id");
+            $row = mysqli_fetch_assoc($sql);
+            $credential_name = sanitizeInput($row['credential_name']);
+            $client_id = intval($row['credential_client_id']);
+
+            mysqli_query($mysqli,"UPDATE credentials SET credential_favorite = 1 WHERE credential_id = $credential_id");
+
+            logAction("Credential", "Edit", "$session_name marked credential $credential_name a favorite", $client_id, $credential_id);
+
+        }
+
+        logAction("Credential", "Bulk Edit", "$session_name favorited $count credentials", $client_id);
+
+        flash_alert("Favorited <strong>$count</strong> credential(s)");
+
+    }
+
+    redirect();
+
+}
+
+if (isset($_POST['bulk_unfavorite_credentials'])) {
+
+    validateCSRFToken($_POST['csrf_token']);
+
+    enforceUserPermission('module_support', 2);
+
+    if (isset($_POST['credential_ids'])) {
+
+        $count = count($_POST['credential_ids']);
+
+        foreach ($_POST['credential_ids'] as $credential_id) {
+
+            $credential_id = intval($credential_id);
+
+            // Get Asset Name and Client ID for logging and alert message
+            $sql = mysqli_query($mysqli,"SELECT credential_name, credential_client_id FROM credentials WHERE credential_id = $credential_id");
+            $row = mysqli_fetch_assoc($sql);
+            $credential_name = sanitizeInput($row['credential_name']);
+            $client_id = intval($row['credential_client_id']);
+
+            mysqli_query($mysqli,"UPDATE credentials SET credential_favorite = 0 WHERE credential_id = $credential_id");
+
+            logAction("Credential", "Edit", "$session_name unfavorited credential $credential_name", $client_id, $credential_id);
+
+        }
+
+        logAction("Crednetial", "Bulk Edit", "$session_name unfavorited $count credentials", $client_id);
+
+        flash_alert("Unfavorited <strong>$count</strong> credential(s)");
+
+    }
+
+    redirect();
+
+}
+
 if (isset($_POST['bulk_archive_credentials'])) {
 
     validateCSRFToken($_POST['csrf_token']);

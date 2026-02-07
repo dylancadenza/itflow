@@ -232,7 +232,17 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                 <i class="fas fa-fw fa-layer-group mr-2"></i>Bulk Action (<span id="selectedCount">0</span>)
                             </button>
                             <div class="dropdown-menu">
+                                <button class="dropdown-item"
+                                    type="submit" form="bulkActions" name="bulk_favorite_credentials">
+                                    <i class="fas fa-fw fa-star text-warning mr-2"></i>Favorite
+                                </button>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item"
+                                    type="submit" form="bulkActions" name="bulk_unfavorite_credentials">
+                                    <i class="far fa-fw fa-star mr-2"></i>Unfavorite
+                                </button>
                                 <?php if ($archived) { ?>
+                                <div class="dropdown-divider"></div>
                                 <button class="dropdown-item text-info"
                                     type="submit" form="bulkActions" name="bulk_unarchive_credentials">
                                     <i class="fas fa-fw fa-redo mr-2"></i>Unarchive
@@ -243,6 +253,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     <i class="fas fa-fw fa-trash mr-2"></i>Delete
                                 </button>
                                 <?php } else { ?>
+                                <div class="dropdown-divider"></div>
                                 <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/credential/credential_bulk_assign_tags.php"
                                     data-bulk="true">
