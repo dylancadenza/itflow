@@ -1058,7 +1058,7 @@ if (isset($_POST['bulk_merge_tickets'])) {
 
     // NEW PARENT ticket details
     // Get merge into ticket id (as it may differ from the number)
-    $sql = mysqli_query($mysqli, "SELECT ticket_id FROM tickets WHERE ticket_id = $merge_into_ticket_id");
+    $sql = mysqli_query($mysqli, "SELECT ticket_id, ticket_number FROM tickets WHERE ticket_id = $merge_into_ticket_id");
     if (mysqli_num_rows($sql) == 0) {
         flash_alert("Cannot merge into that ticket.", 'error');
         redirect();
@@ -1836,7 +1836,7 @@ if (isset($_POST['merge_ticket'])) {
 
     // NEW PARENT ticket details
     // Get merge into ticket id (as it may differ from the number)
-    $sql = mysqli_query($mysqli, "SELECT ticket_id, ticket_client_id FROM tickets WHERE ticket_id = $merge_into_ticket_id");
+    $sql = mysqli_query($mysqli, "SELECT ticket_id, ticket_number, ticket_client_id FROM tickets WHERE ticket_id = $merge_into_ticket_id");
     if (mysqli_num_rows($sql) == 0) {
         flash_alert("Cannot merge into that ticket.", 'error');
         redirect();
