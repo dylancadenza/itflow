@@ -8,6 +8,7 @@ This file documents all notable changes made to ITFlow.
 - Calendar: Restrict Events for client restricted agents. 
 - Ticket Merge: Fix.
 - Asset Transfer: Fix.
+- Ticket Listing: Restrict Tickets presented in ticket list view from client restricted agents.
 
 ### New Features & Updates 
 - Report: Added Client Detail Auditing.

@@ -113,6 +113,7 @@ $sql = mysqli_query(
     $ticket_billable_snippet
     $ticket_project_snippet
     $ticket_permission_snippet
+    $access_permission_query
     $client_query
     ORDER BY
         CASE
