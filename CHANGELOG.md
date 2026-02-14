@@ -11,12 +11,13 @@ This file documents all notable changes made to ITFlow.
 - Ticket Listing: Restrict Tickets presented in ticket list view from client restricted agents.
 - Ticket Details: Deny access to client restricted agents to view tickets without client_id in uri.
 - Tickets: Allow agents with restricted client access to view and edit tickets without a client.
-- Ticket Change client: Limit selection for agents with restricted client access. 
+- Ticket Change client: Limit selection for agents with restricted client access.
 
 ### New Features & Updates 
 - Report: Added Client Detail Auditing.
 - API: Added Endpoint to retrieve time worked by agent.
 - ajax-modal: Revert to previous JS implementation before 26.02 release.
+- Ticket: Move Subject from Ticket main ticket header to ticket details card header.
 
 ## [26.02] Stable Release
 ### Bug Fixes
