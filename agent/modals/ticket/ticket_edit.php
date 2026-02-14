@@ -4,7 +4,7 @@ require_once '../../../includes/modal_header.php';
 
 $ticket_id = intval($_GET['id']);
 
-$sql = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN clients ON client_id = ticket_client_id WHERE ticket_id = $ticket_id LIMIT 1");
+$sql = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN clients ON client_id = ticket_client_id WHERE ticket_id = $ticket_id $access_permission_query LIMIT 1");
 
 $row = mysqli_fetch_assoc($sql);
 $client_id = intval($row['client_id']);
