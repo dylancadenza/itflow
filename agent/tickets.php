@@ -88,9 +88,9 @@ if (isset($_GET['project']) & !empty($_GET['project']) && $_GET['project'] > '0'
     $ticket_project_filter_id = intval($_GET['project']);
 }
 
-// Ticket client access overide
+// Ticket client access overide - This is the only way to show tickets without a client to agents with restricted client access
 $access_permission_query_overide = '';
-if (!empty($client_access_string)) {
+if ($client_access_string) {
     $access_permission_query_overide = "AND ticket_client_id IN (0,$client_access_string)";
 }
 

@@ -10,6 +10,8 @@ This file documents all notable changes made to ITFlow.
 - Asset Transfer: Fix.
 - Ticket Listing: Restrict Tickets presented in ticket list view from client restricted agents.
 - Ticket Details: Deny access to client restricted agents to view tickets without client_id in uri.
+- Tickets: Allow agents with restricted client access to view and edit tickets without a client.
+- Ticket Change client: Limit selection for agents with restricted client access. 
 
 ### New Features & Updates 
 - Report: Added Client Detail Auditing.
