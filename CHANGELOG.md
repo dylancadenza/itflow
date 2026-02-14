@@ -12,6 +12,7 @@ This file documents all notable changes made to ITFlow.
 - Ticket Details: Deny access to client restricted agents to view tickets without client_id in uri.
 - Tickets: Allow agents with restricted client access to view and edit tickets without a client.
 - Ticket Change client: Limit selection for agents with restricted client access.
+- Ticket Details: Don't display Updated at when null.
 
 ### New Features & Updates 
 - Report: Added Client Detail Auditing.
